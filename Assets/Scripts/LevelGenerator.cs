@@ -73,15 +73,17 @@ public class LevelGenerator : MonoBehaviour
                     break;
             }
         }
+
         for (int i = 0; i < 25; i++) {//Перемешивание карт
             GameObject tmp = SetOfCard[i];
             int r = UnityEngine.Random.Range(i, SetOfCard.Length);
             SetOfCard[i] = SetOfCard[r];
             SetOfCard[r] = tmp;
-
         }
 
-
+        Camera cam = GameObject.Find("Main Camera").GetComponent(typeof(Camera)) as Camera;
+        cameraBS cbs = cam.GetComponent(typeof(cameraBS)) as cameraBS;
+        
         float xpos = -3f;
         float ypos = -4.4f;
         for (int i = 0; i < 5; i++)
@@ -96,6 +98,8 @@ public class LevelGenerator : MonoBehaviour
                 int num = i * 5 + j;
 
                 SetOfCard[num] = Instantiate(SetOfCard[num], new Vector3(PosX, PosY, 0), Quaternion.identity) as GameObject;
+                Transform t = SetOfCard[num].transform;
+                cbs.rost(t);
                 CardBihevior CardBH = SetOfCard[num].GetComponent<CardBihevior>();
                 CardBH.SetPosition(PosX, PosY);
             }
@@ -114,6 +118,7 @@ public class LevelGenerator : MonoBehaviour
             cardEmount[i, 0] = nomerCarty;
             cardEmount[i, 1] = Masty;
         }
+
         return cardEmount;
     }
 
@@ -123,110 +128,7 @@ public class LevelGenerator : MonoBehaviour
         triesLabel.text = tries.ToString();
         CardBihevior CardBH;
         bool stat;
-        for (int i = 0; i < 25; i++)
-        {
-            if (SetOfCard[i] != null)
-            {
-                CardBH = SetOfCard[i].GetComponent<CardBihevior>();
-                stat = CardBH.getState();
 
-
-                if (stat)
-                {//Опредиление открытой карты
-                    number = i;
-                }
-
-                if (number != -1)
-                {// Block all card when one is chozen
-                    if (number != i)
-                    {
-                        CardBH.SetBlock(true);
-                    }
-                }
-
-                
-
-                if (number == i & CardBH.Openstate())
-                {
-                    
-                    if (SetOfCard[i].name == "sun(Clone)"   | SetOfCard[i].name == "star(Clone)" |
-                        SetOfCard[i].name == "tower(Clone)" | SetOfCard[i].name == "moon(Clone)")
-                    {
-                        
-                        CheckOfArkan(SetOfCard[i]);
-                    }
-                    else
-                    {
-                        number = -1;
-                        EmountOfOpencard++;
-                        if (EmountOfOpencard == 1)
-                        {
-                            BufCard1 = SetOfCard[i];
-                        }
-                        if (EmountOfOpencard == 2)
-                        {
-                            BufCard2 = SetOfCard[i];
-                        }
-                        LockAllCards(false);
-                        CardBH.SetBlock(true);
-                    }
-                }
-
-                if (EmountOfOpencard == 2)
-                {
-                    //Все карты блокируются
-                    LockAllCards(true);
-
-                    if (BufCard1.name == BufCard2.name)//Если две карты одинаковые.
-                    {
-                        //destruction
-                        CardBihevior ACard = BufCard1.GetComponent<CardBihevior>();
-                        CardBihevior BCard = BufCard2.GetComponent<CardBihevior>();
-                        
-                        int a = ACard.GetCliks();
-                        int b = BCard.GetCliks();
-                        int c = (a*5)+(b*5)-10;
-                        c = 30 - c;
-                        if (c < 0) {
-                            c = 0;
-                        }
-                        Score += c;
-                        
-
-                        ACard.Death();
-                        BCard.Death();
-
-                        float[] fc = ACard.getPosition();
-                        float[] sc = BCard.getPosition();
-                        GameObject Splash1 = Instantiate(PartSys, new Vector3(fc[0], fc[1], 0), Quaternion.identity) as GameObject;
-                        GameObject Splash2 = Instantiate(PartSys, new Vector3(sc[0], sc[1], 0), Quaternion.identity) as GameObject;
-                        Destroy(Splash1, 4);
-                        Destroy(Splash2, 4);
-                        Destroy(BufCard1, 1.5f);
-                        Destroy(BufCard2, 1.5f);
-                        tries++;
-
-                    }
-
-                    if (BufCard1.name != BufCard2.name) {
-                        CardBihevior ACard = BufCard1.GetComponent<CardBihevior>();
-                        CardBihevior BCard = BufCard2.GetComponent<CardBihevior>();
-                        ACard.notAcouple();
-                        BCard.notAcouple();
-                        tries--;
-                    }
-                    //Unlock cards
-                    LockAllCards(false);
-
-                    BufCard1 = null;
-                    BufCard2 = null;
-                    EmountOfOpencard = 0;
-
-                }
-                
-               
-            }
-        }
     }
 
     private void LockAllCards(bool b) {
@@ -352,6 +254,117 @@ public class LevelGenerator : MonoBehaviour
         }
     }
 
+    private void setChosencard(CardBihevior cb) {
+
+    }
+    /*
+      for (int i = 0; i < 25; i++)
+        {
+            if (SetOfCard[i] != null)
+            {
+                CardBH = SetOfCard[i].GetComponent<CardBihevior>();
+                stat = CardBH.getState();
+
+
+                if (stat)
+                {//Опредиление открытой карты
+                    number = i;
+                }
+
+                if (number != -1)
+                {// Block all card when one is chozen
+                    if (number != i)
+                    {
+                        CardBH.SetBlock(true);
+                    }
+                }
+
+                
+
+                if (number == i & CardBH.Openstate())
+                {
+                    
+                    if (SetOfCard[i].name == "sun(Clone)"   | SetOfCard[i].name == "star(Clone)" |
+                        SetOfCard[i].name == "tower(Clone)" | SetOfCard[i].name == "moon(Clone)")
+                    {
+                        
+                        CheckOfArkan(SetOfCard[i]);
+                    }
+                    else
+                    {
+                        number = -1;
+                        EmountOfOpencard++;
+                        if (EmountOfOpencard == 1)
+                        {
+                            BufCard1 = SetOfCard[i];
+                        }
+                        if (EmountOfOpencard == 2)
+                        {
+                            BufCard2 = SetOfCard[i];
+                        }
+                        LockAllCards(false);
+                        CardBH.SetBlock(true);
+                    }
+                }
+
+                if (EmountOfOpencard == 2)
+                {
+                    //Все карты блокируются
+                    LockAllCards(true);
+
+                    if (BufCard1.name == BufCard2.name)//Если две карты одинаковые.
+                    {
+                        //destruction
+                        CardBihevior ACard = BufCard1.GetComponent<CardBihevior>();
+                        CardBihevior BCard = BufCard2.GetComponent<CardBihevior>();
+                        
+                        int a = ACard.GetCliks();
+                        int b = BCard.GetCliks();
+                        int c = (a*5)+(b*5)-10;
+                        c = 30 - c;
+                        if (c < 0) {
+                            c = 0;
+                        }
+                        Score += c;
+                        
+
+                        ACard.Death();
+                        BCard.Death();
+
+                        float[] fc = ACard.getPosition();
+                        float[] sc = BCard.getPosition();
+                        GameObject Splash1 = Instantiate(PartSys, new Vector3(fc[0], fc[1], 0), Quaternion.identity) as GameObject;
+                        GameObject Splash2 = Instantiate(PartSys, new Vector3(sc[0], sc[1], 0), Quaternion.identity) as GameObject;
+                        Destroy(Splash1, 4);
+                        Destroy(Splash2, 4);
+                        Destroy(BufCard1, 1.5f);
+                        Destroy(BufCard2, 1.5f);
+                        tries++;
+
+                    }
+
+                    if (BufCard1.name != BufCard2.name) {
+                        CardBihevior ACard = BufCard1.GetComponent<CardBihevior>();
+                        CardBihevior BCard = BufCard2.GetComponent<CardBihevior>();
+                        ACard.notAcouple();
+                        BCard.notAcouple();
+                        tries--;
+                    }
+                    //Unlock cards
+                    LockAllCards(false);
+
+                    BufCard1 = null;
+                    BufCard2 = null;
+                    EmountOfOpencard = 0;
+
+                }
+                
+               
+            }
+        }
+     
+     
+     */
 }
 
 

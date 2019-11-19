@@ -4,6 +4,9 @@ using UnityEngine;
 
 public class CardBihevior : MonoBehaviour
 {
+    private LevelGenerator LvlGen;
+
+
     private bool ischosen = false;
     private bool isopen = false;
     private bool isBlock = false;
@@ -64,7 +67,8 @@ public class CardBihevior : MonoBehaviour
 
     void Start()
     {
-       while (DirOfRotation == 0)
+    LvlGen = GameObject.Find("GameManager").GetComponent(typeof(LevelGenerator)) as LevelGenerator;
+        while (DirOfRotation == 0)
             {
                 DirOfRotation = Random.Range(-50, 50);
                 if (DirOfRotation != 0)
@@ -106,6 +110,7 @@ public class CardBihevior : MonoBehaviour
                 TotalClicks++;
                 axeY = 180;
             }
+            //LvlGen.
         }
         if (flipBack) {//return to normal position
                 transform.Rotate(0, 3.1f * DirOfRotation, 0);
