@@ -17,7 +17,8 @@ public class cameraBS : MonoBehaviour
     private Camera cam;
     private Canvas can;
     private CanvasScaler cs;
-    private int height;
+    private float screenWight;
+    private float osHight;
 
     // Start is called before the first frame update
     void Start()
@@ -34,13 +35,15 @@ public class cameraBS : MonoBehaviour
 
         
         transform.position = Vector3.SmoothDamp(transform.position, offset,ref velocity , smoothTime);
-        
 
+        screenWight = GetMaxDistance()[0] + 2;
+        osHight = GetMaxDistance()[1];
     }
 
     // Update is called once per frame
     void LateUpdate()
     {
+        
         if (targets.Count == 0) {
             transform.position = Vector3.SmoothDamp(transform.position, offset, ref velocity, smoothTime);
             
@@ -48,15 +51,8 @@ public class cameraBS : MonoBehaviour
         }
         move();
         zome();
+        mashtab();
 
-
-    }
-
-    void move() {
-
-        Vector3 CentPoint = getCentr();
-        Vector3 Newpost = CentPoint + offset;
-        transform.position = Vector3.SmoothDamp(transform.position, Newpost, ref velocity, smoothTime);
     }
 
     private float getHorizontalAngle(Camera camera)
@@ -65,6 +61,7 @@ public class cameraBS : MonoBehaviour
         float cameraHeightAt1 = Mathf.Tan(vFOVrad * .5f);
         return Mathf.Atan(cameraHeightAt1 * camera.aspect) * 2f * Mathf.Rad2Deg;
     }
+
     private float SetHorizontalAngle(float horizontalFOV, float aspect)
     {
 
@@ -72,34 +69,70 @@ public class cameraBS : MonoBehaviour
         
     }
 
+    private void move() {
+
+        
+
+        var asp = cam.aspect;
+        var screenHight = screenWight / asp;
+
+        var ofy = (screenHight / 2) - ((osHight / 2) + 1);
 
 
+        //offset.y = ofy*(screenWight / -offset.z);
 
-    void zome() {
+        //Vector3 CentPoint = getCentr();
+        Vector3 Newpost = offset;//+CentPoint;
+        transform.position = Vector3.SmoothDamp(transform.position, Newpost, ref velocity, smoothTime);
+    }
+
+    private void zome() {
+
         if (cam.orthographic != false) {
             cam.orthographic = false;
 
         }
+        //FIND ANGLE for camera
+        var cuality = 0.03f;
+        var asp = cam.aspect;
+        var screenHight = screenWight / asp;
+        var anglew = Mathf.Abs(Mathf.Rad2Deg * 2 * Mathf.Atan((screenWight / 2) / offset.z));
+        //
+
         //zoom of objects by changin the 
-        if (Mathf.Abs(cam.fieldOfView - SetHorizontalAngle(45f, cam.aspect))>.5f)
+        if (Mathf.Abs(cam.fieldOfView - SetHorizontalAngle(anglew, cam.aspect))> cuality)
         {
-            if (SetHorizontalAngle(45, cam.aspect)+0.5f> cam.fieldOfView | SetHorizontalAngle(45, cam.aspect) - 0.5f < cam.fieldOfView)
+            if (SetHorizontalAngle(anglew, cam.aspect)+ cuality > cam.fieldOfView | SetHorizontalAngle(anglew, cam.aspect) - cuality < cam.fieldOfView)
             {
                 if (cam.fieldOfView < SetHorizontalAngle(45, cam.aspect))
-                    cam.fieldOfView = Mathf.Lerp(cam.fieldOfView, SetHorizontalAngle(45, cam.aspect), Time.deltaTime);
+                    cam.fieldOfView = Mathf.Lerp(cam.fieldOfView, SetHorizontalAngle(anglew, cam.aspect), Time.deltaTime);
                 else
-                    cam.fieldOfView = Mathf.Lerp(SetHorizontalAngle(45, cam.aspect), cam.fieldOfView, Time.deltaTime);
+                    cam.fieldOfView = Mathf.Lerp(SetHorizontalAngle(anglew, cam.aspect), cam.fieldOfView, Time.deltaTime);
                 
                 //cam.fieldOfView = SetHorizontalAngle(45f, cam.aspect);
             }   
         }
         // zoom of ui
+        
+        
+        
+        
+    }
+
+    private void mashtab() {
+        var asp = cam.aspect;
+        var screenHight = screenWight / asp;
+        var anglew = Mathf.Abs(Mathf.Rad2Deg * 2 * Mathf.Atan((screenWight / 2) / offset.z));
+        var ofy = (screenHight / 2) - ((osHight / 2) + 1);
+        var offy = ofy * (screenWight / -offset.z);
+
         int mph = cam.pixelHeight;
         int mpw = cam.pixelWidth;
-        var asp = cam.aspect;
-        
-        print("|H:"+mph+ "|W:" + mpw + "|asp:" + asp+ "|\n");
+
+        print("( " + mph/screenHight + " / " + osHight + " / " + asp + " / " + offy + " / " + ofy + ")");
+        //tang = Mathf.Rad2Deg*2*Mathf.Atan(offset.z/(screenWight/2));
     }
+
     float[] GetMaxDistance() {
 
         var bounds = new Bounds(targets[0].position, Vector3.zero);
@@ -123,12 +156,14 @@ public class cameraBS : MonoBehaviour
         {
             bounds.Encapsulate(targets[i].position);
         }
+
         return bounds.center;
     }
     
-
     public void rost(Transform t) {
         targets.Add(t);
 
     }
+
+    
 }
