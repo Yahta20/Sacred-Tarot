@@ -49,8 +49,7 @@ public class cameraBS : MonoBehaviour
             
             return;
         }
-        move();
-        zome();
+
         mashtab();
 
     }
@@ -69,34 +68,23 @@ public class cameraBS : MonoBehaviour
         
     }
 
-    private void move() {
-
+    private void move(float ofsy) {
         
-
-        var asp = cam.aspect;
-        var screenHight = screenWight / asp;
-
-        var ofy = (screenHight / 2) - ((osHight / 2) + 1);
-
-
-        //offset.y = ofy*(screenWight / -offset.z);
+        offset.y = ofsy;
 
         //Vector3 CentPoint = getCentr();
         Vector3 Newpost = offset;//+CentPoint;
         transform.position = Vector3.SmoothDamp(transform.position, Newpost, ref velocity, smoothTime);
     }
 
-    private void zome() {
+    private void zome(float anglew) {
 
         if (cam.orthographic != false) {
             cam.orthographic = false;
 
         }
         //FIND ANGLE for camera
-        var cuality = 0.03f;
-        var asp = cam.aspect;
-        var screenHight = screenWight / asp;
-        var anglew = Mathf.Abs(Mathf.Rad2Deg * 2 * Mathf.Atan((screenWight / 2) / offset.z));
+        var cuality = 0.001f;
         //
 
         //zoom of objects by changin the 
@@ -114,22 +102,19 @@ public class cameraBS : MonoBehaviour
         }
         // zoom of ui
         
-        
-        
-        
     }
 
     private void mashtab() {
         var asp = cam.aspect;
         var screenHight = screenWight / asp;
         var anglew = Mathf.Abs(Mathf.Rad2Deg * 2 * Mathf.Atan((screenWight / 2) / offset.z));
-        var ofy = (screenHight / 2) - ((osHight / 2) + 1);
-        var offy = ofy * (screenWight / -offset.z);
+        var ofy = (screenHight / 2) - ((osHight / 2) + 1);//
+        var offy = Mathf.Abs(ofy * Mathf.Sin(cam.fieldOfView / 2));
 
-        int mph = cam.pixelHeight;
-        int mpw = cam.pixelWidth;
+        move(offy);
+        zome(anglew);
 
-        print("( " + mph/screenHight + " / " + osHight + " / " + asp + " / " + offy + " / " + ofy + ")");
+        print("( " + screenHight + " / " + osHight + " / " + ofy + " / " + offy + ")");
         //tang = Mathf.Rad2Deg*2*Mathf.Atan(offset.z/(screenWight/2));
     }
 
