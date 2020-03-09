@@ -14,6 +14,6 @@ public class pentRot : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        transform.Rotate(0,0,Time.deltaTime*rotSpeed);
+        transform.Rotate(0, Time.deltaTime * rotSpeed, 0);
     }
 }

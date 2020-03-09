@@ -12,48 +12,62 @@ public class LevelGenerator : MonoBehaviour
     [SerializeField] private GameObject[] PentArcCard;
     [SerializeField] private GameObject[] SwordArcCard;
     [SerializeField] private GameObject[] WandArcCard;
-    [SerializeField] private GameObject PartSys;
+    [SerializeField] private GameObject   PartSys;
     [SerializeField] private Text scoreLabel;
     [SerializeField] private Text triesLabel;
+    [SerializeField] public float cardSizeX;//      = 1.3f;
+    [SerializeField] public float cardSizeY;//      = 2f;
+    [SerializeField] public float setX;//           = cardSizeX / 4 * (1 - 0.61f);
+    [SerializeField] public float setY;//           = (cam.aspect/(GetMaxDistance(1)/ GetMaxDistance(2))) * setX;
+    [SerializeField] public float reservSpaceX;//   =0.75 
+    [SerializeField] public float reservSpaceY;//   =0.9
 
     private GameObject[] SetOfCard = new GameObject[25];
-    private GameObject BufCard1 = null;
-    private GameObject BufCard2 = null;
-    private const float OffsetX = 1.5f;
-    private const float OffsetY = 2.2f;
+    private GameObject[,] CardPack = new GameObject [5,5];
+    
+    private GameObject    BufCard1  = null;
+    private GameObject    BufCard2  = null;
 
-    private const string path = "Assets/Data/Prog.dat";
+    private CameraBihevior cbs = null;
+
+    private const string path       = "Assets/Data/Prog.dat";
     private string Param;
 
-    private int[] BufParam = new int[5];
+    private int[] BufParam          = new int[5];
 
-    int emountcups;
-    int emountpent;
-    int emountsword;
-    int emountwand;
-    int number = -1;
-    int EmountOfOpencard = 0;
-    long Score=0;
-    int tries = 10;
+    private int emountcups =1;
+    private int emountpent =1;
+    private int emountsword=1;
+    private int emountwand =1;
+    private int number = -1;
+    private int EmountOfOpencard = 0;
+    private long Score = 0;
+    private long maxScore = 0;
+    private int tries = 10;
 
     void Awake()
     {
         StreamReader sr = new StreamReader(path);
-        if (sr != null) {//Чтение достижений народного хозяйства
+        //Чтение достижений народного хозяйства
+        if (sr != null) {
             int i = 0;
             while (!sr.EndOfStream) {
                 BufParam[i] = Convert.ToInt32(sr.ReadLine());
                 i++;
             }
-        }
+             emountcups =BufParam[0];
+             emountpent =BufParam[1];
+             emountsword=BufParam[2];
+             emountwand =BufParam[3];
+             maxScore   =BufParam[4];
+}
 
-        int[,] MapOfCards = Tassovaty(BufParam);
-
+        int[,] MapOfCards = Tassovaty(BufParam);//Map of cards and emount of it that will be playing
+        //Set patron Arcan as 25th card
         SetOfCard[24] = HighArcCard[UnityEngine.Random.Range(0, HighArcCard.Length)];
-        
-        for (int i = 0; i < 12; i++) {//Создание масива карт
-
-
+        //CardPack[0,0] = HighArcCard[UnityEngine.Random.Range(0, HighArcCard.Length)];
+        //Создание масива карт
+        for (int i = 0; i < 12; i++) {
             switch (MapOfCards[i, 1]) {
                 case 0:
                     SetOfCard[i] = CupArcCard[MapOfCards[i, 0]];
@@ -73,73 +87,120 @@ public class LevelGenerator : MonoBehaviour
                     break;
             }
         }
-
-        for (int i = 0; i < 25; i++) {//Перемешивание карт
+        //Перемешивание карт
+        for (int i = 0; i < 25; i++) {
             GameObject tmp = SetOfCard[i];
             int r = UnityEngine.Random.Range(i, SetOfCard.Length);
             SetOfCard[i] = SetOfCard[r];
             SetOfCard[r] = tmp;
         }
-
+        //Conecting drawing area
         Camera cam = GameObject.Find("Main Camera").GetComponent(typeof(Camera)) as Camera;
-        cameraBS cbs = cam.GetComponent(typeof(cameraBS)) as cameraBS;
+        cbs = cam.GetComponent(typeof(CameraBihevior)) as CameraBihevior;
         
-        float xpos = -3f;
-        float ypos = -4.4f;
+        float xpos = cardSizeX * -2;//3f;
+
+        float ypos = cardSizeY * -2 ;//-4.4f;
         for (int i = 0; i < 5; i++)
         {
-
             for (int j = 0; j < 5; j++)
             {
-                float PosX = xpos + (OffsetX * i);
-                float PosY = ypos + (OffsetY * j);
-
-                //card = Instantiate
+                float[] posit = new float[2] { xpos + (cardSizeX * i), ypos + (cardSizeY * j) };
                 int num = i * 5 + j;
-
-                SetOfCard[num] = Instantiate(SetOfCard[num], new Vector3(PosX, PosY, 0), Quaternion.identity) as GameObject;
-                Transform t = SetOfCard[num].transform;
-                cbs.rost(t);
+                
+                SetOfCard[num] = Instantiate(SetOfCard[num], new Vector3(posit[0], posit[1], 0), Quaternion.identity) as GameObject;
                 CardBihevior CardBH = SetOfCard[num].GetComponent<CardBihevior>();
-                CardBH.SetPosition(PosX, PosY);
+                CardBH.StartPosition(posit);
+                CardBH.SetLinkToCard(SetOfCard[num]);
+                cbs.rost(SetOfCard[num].transform);
+
             }
         }
-    }
 
-    
+        setX = cardSizeX/2*(1-0.61f);
+        setY = cardSizeY/2*(1-0.61f);
+
+    }
 
     private int[,] Tassovaty(int[] inArray)//создание масива карт что будут на поле
     {
         int[,] cardEmount = new int[12, 2];
 
         for (int i = 0; i < 12; i++) {
-            int Masty = UnityEngine.Random.Range(0, 4);
-            int nomerCarty = UnityEngine.Random.Range(0, inArray[Masty]);
+            int Masty = UnityEngine.Random.Range(0, 4);//chose of cardmark 
+            int nomerCarty = UnityEngine.Random.Range(0, inArray[Masty]);//Random making of new card
             cardEmount[i, 0] = nomerCarty;
             cardEmount[i, 1] = Masty;
         }
 
         return cardEmount;
     }
-
-    void FixedUpdate()
+    
+    void LateUpdate()
     {
         scoreLabel.text = Score.ToString();
         triesLabel.text = tries.ToString();
-        CardBihevior CardBH;
-        bool stat;
 
+        CardBihevior FirstChosenCard;
+        CardBihevior SecondChosenCard;
+
+        bool stat;
+        
+        var koef = cbs.getaspect() / (reservSpaceX/reservSpaceY);
+        
+        //minimum distance between cards 
+        setX = (setX >= cardSizeX / 4 * (1 - 0.61f)) ? roundFloat(setX) : roundFloat(cardSizeX / 4 * (1 - 0.61f));
+          
+        setY = roundFloat( setX /koef);
+
+
+ 
+
+        //var w = cbs.GetMaxDistance(1);
+        //var h = cbs.GetMaxDistance(2);
+
+        //var wmax = roundFloat ( w * koef);
+        //var hmax = roundFloat ( h * koef);
+
+
+
+        //mAximum distance between cards
+        
+        
+        
+
+        float[] a = { setX, setY };
+        
+        foreach (GameObject child in SetOfCard)
+        {
+            CardBihevior ChildBihevior = child.GetComponent(typeof(CardBihevior)) as CardBihevior;
+            float[] cardPos = ChildBihevior.getPosition();
+            a[0] = (cardPos[0] / cardSizeX) * setX;
+            a[1] = (cardPos[1] / cardSizeY) * setY;
+            ChildBihevior.SetPosition(a);
+        }
+
+
+        if (BufCard1 != null) {
+            FirstChosenCard = BufCard1.GetComponent<CardBihevior>();
+            if (FirstChosenCard.ischosen) {
+                LockAllCards(false);
+            }
+
+        }
     }
 
     private void LockAllCards(bool b) {
         ///Locking or Unlocking all cards by putting bool charakter
+        
         for (int j = 0; j < 25; j++)
         {
             if (SetOfCard[j] != null)
             {
                 CardBihevior Card = SetOfCard[j].GetComponent<CardBihevior>();
                 Card.SetBlock(b);
-            }
+            } 
+
         }
     }
 
@@ -197,7 +258,7 @@ public class LevelGenerator : MonoBehaviour
                     }
                     for (int i=0;i> cardtoopen.Length;i++) {
                         CardBihevior cb = cardtoopen[i].GetComponent<CardBihevior>();
-                        cb.toChose(true);
+                        cb.ischosen=true;
                     }
 
                 }
@@ -254,9 +315,70 @@ public class LevelGenerator : MonoBehaviour
         }
     }
 
-    private void setChosencard(CardBihevior cb) {
+    public void setChosenCard(GameObject go) {
+        if (BufCard1 == null) {
+            BufCard1 = go;
+            LockAllCards(true);
+        } else if (BufCard2 == null) {
 
+        }
     }
+
+    private float roundFloat(float n) {
+        return ((float)(int)(n * 100)) / 100;
+    }
+
+    /*
+       var cardasp = x / y;
+
+
+       if ((cardasp/cbs.getaspect())>1.00f || (cardasp / cbs.getaspect()) < 1.00f) {
+
+           var st = (cardasp / cbs.getaspect()).ToString();
+           st = (st.Length>6) ? st.Substring(0, 6) : st;
+           setY = (float.Parse(st)<1) ? Mathf.Lerp(setY, setY - 0.0025f, Time.deltaTime) : Mathf.Lerp(setY, setY + 0.0025f, Time.deltaTime);
+           setX = (float.Parse(st)<1) ? Mathf.Lerp(setX, setX + 0.0025f, Time.deltaTime) : Mathf.Lerp(setX, setX - 0.0025f, Time.deltaTime);
+
+       }
+
+
+
+       setX =(setX > cardSizeX / 4 * (1 - 0.61f)) ? cardSizeX / 4 * (1 - 0.61f): cardSizeX / 4 * (1 - 0.61f);
+       setY=(setY > cardSizeY / 4 * (1 - 0.61f)) ?cardSizeX / 4 * (1 - 0.61f): cardSizeX / 4 * (1 - 0.61f);
+       */
+
+
+    /*
+    x = (x.Length > 3)   ? x.Substring(0, 3) : x;
+    y = (y.Length > 3)   ? y.Substring(0, 3) : y;
+
+    if ( float.Parse(x) != 6.0f) {
+        setX = (cbs.GetMaxDistance(1) < 6) ? Mathf.Lerp(setX, setX + 0.02f, Time.deltaTime) : Mathf.Lerp(setX, setX - 0.02f, Time.deltaTime);
+
+        if (x.Length > 3 ) {
+            x = x.Substring(0, 3);
+            setX = (float.Parse(x) == 6.0f) ? Mathf.Lerp(setX, float.Parse(x), Time.deltaTime) : Mathf.Lerp(setX, float.Parse(x), Time.deltaTime);
+
+        }
+    }
+    if (float.Parse(y) != 9.0f)
+    {
+        setY = (cbs.GetMaxDistance(2) < 9) ? Mathf.Lerp(setY, setY + 0.02f, Time.deltaTime) : Mathf.Lerp(setY, setY - 0.02f, Time.deltaTime);
+
+        if (y.Length > 3)
+        {
+            y = y.Substring(0, 3);
+            setY = (float.Parse(y) == 9.0f) ? Mathf.Lerp(setY, float.Parse(y), Time.deltaTime) : Mathf.Lerp(setX, float.Parse(y), Time.deltaTime);
+        }
+    }
+    //setY = (float.Parse(y) == 9.0f) ? setY : 0;
+
+
+
+    //setX = (cbs.GetMaxDistance(1).ToString) ? Mathf.Lerp(setX, setX + 0.02f, Time.deltaTime) : setX;
+
+    var condy = cbs.GetMaxDistance(2) / 4 / 6;
+    */
     /*
       for (int i = 0; i < 25; i++)
         {

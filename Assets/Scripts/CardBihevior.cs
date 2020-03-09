@@ -2,26 +2,34 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+//[RequireComponent(typeof(Camera))]
+
 public class CardBihevior : MonoBehaviour
 {
     private LevelGenerator LvlGen;
+    private GameObject go;
 
+    public Vector3 offset;
+    private Vector3 velocity;
 
-    private bool ischosen = false;
-    private bool isopen = false;
-    private bool isBlock = false;
-    private bool deathtime = false;
-    private bool flipBack = false;
+    public bool  ischosen   {get; set;}
+    private bool isopen     {get; set;}
+    private bool isBlock    {get; set;}
+    private bool deathtime  {get; set;}
+    private bool flipBack   {get; set;}
+
+    public float smoothTime = .5f;
     private float posX;
     private float posY;
     private float axeY;
-    private int DirOfRotation=0;
-    private int TotalClicks = 0;
     private float f = 0.1f;
+    private float sizex = 1;//size x of card
+    private float sizey = 1;//size y of card
 
-    public bool getState() {
-        return ischosen;
-    }
+    private float[] posit = new float[2];
+
+    private int DirOfRotation = 0;
+    private int TotalClicks = 0;
 
     public void Death() {
         deathtime = true;
@@ -29,24 +37,33 @@ public class CardBihevior : MonoBehaviour
 
     public void SetBlock(bool a)
     {
-        isBlock = a; 
+        isBlock = a;
     }
 
     public bool GetBlock() {
         return isBlock;
     }
 
-    public void SetPosition(float x, float y) {
-        posX = x;
-        posY = y;
+    public void StartPosition(float[] x)
+    {
+        posit[0]=x[0];
+        posit[1]=x[1];
+        offset.x = x[0];
+        offset.y = x[1];
     }
 
-    public float [] getPosition( )
+    public void SetPosition(float [] x) {
+        offset.x = posit[0]+x[0];
+        offset.y = posit[1]+x[1];
+        
+        //Vector3 Newpost = offset;
+    }
+
+    public float[] getPosition()
     {
-        float[] buf = new float[2];
-        buf[0] = posX;
-        buf[1] = posY;
+        float[] buf = new float[] { transform.position.x, transform.position.y };
         return buf;
+
     }
 
     public bool Openstate() {
@@ -58,34 +75,41 @@ public class CardBihevior : MonoBehaviour
     }
 
     public void notAcouple() {
-        flipBack= true;
+        flipBack = true;
     }
 
-    public void toChose(bool b) {
-         ischosen=b;
+    public void SetLinkToCard(GameObject lo){
+        go = lo;
     }
-
-    void Start()
+    
+    void Awake()
     {
-    LvlGen = GameObject.Find("GameManager").GetComponent(typeof(LevelGenerator)) as LevelGenerator;
-        while (DirOfRotation == 0)
-            {
-                DirOfRotation = Random.Range(-50, 50);
-                if (DirOfRotation != 0)
-                {
-                    DirOfRotation = DirOfRotation / Mathf.Abs(DirOfRotation);
-                }
-            }
-        
+        LvlGen = GameObject.Find("GameManager").GetComponent(typeof(LevelGenerator)) as LevelGenerator;
+        isopen = false;
+        ischosen = false;
+        deathtime = false;
+        flipBack = false;
+
+        //go = GetComponent<GameObject>();
+        //while (dirofrotation == 0)
+        //{
+        //    dirofrotation = random.range(-50, 50);
+        //    if (dirofrotation != 0)
+        //    {
+        //        dirofrotation = dirofrotation / mathf.abs(dirofrotation);
+        //    }
+        //}
+
     }
 
     void FixedUpdate()
     {
+        transform.position = Vector3.SmoothDamp(transform.position, offset, ref velocity, smoothTime * Time.deltaTime);
+        
         if (deathtime) {
             transform.Rotate(0, f * DirOfRotation, 0);
-            f += 0.5f;
+            f += 0.5f+Mathf.Sin(Mathf.PI/6);
         }
-
         if (ischosen) {
             //if card is chosen
             transform.Rotate(0,4.5f*DirOfRotation,0);
@@ -98,6 +122,7 @@ public class CardBihevior : MonoBehaviour
                 isBlock = true;
                 TotalClicks++;
                 axeY = 180;
+                
             }
 
             if ((transform.localEulerAngles.y == 180 | transform.localEulerAngles.y <= -170) & DirOfRotation < 0)
@@ -132,21 +157,22 @@ public class CardBihevior : MonoBehaviour
 
     void OnMouseDown()
     {
-        
         if (!isopen)
         {
-            
             if (isBlock == false)
             {
-                
                 if (!ischosen)
                 {
                     ischosen = true;
-                    
+                    LvlGen.setChosenCard(go);
                 }
             }
         }
     }
 
+    void Canvas()
+    {
+        
+    }
 
 }
