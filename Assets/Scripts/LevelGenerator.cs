@@ -29,7 +29,7 @@ public class LevelGenerator : MonoBehaviour
     private GameObject    BufCard2  = null;
 
     private CameraBihevior cbs = null;
-
+    
     private const string path       = "Assets/Data/Prog.dat";
     private string Param;
 
@@ -39,28 +39,24 @@ public class LevelGenerator : MonoBehaviour
     private int emountpent =1;
     private int emountsword=1;
     private int emountwand =1;
-    private int number = -1;
-    private int EmountOfOpencard = 0;
+    
+    
     private long Score = 0;
     private long maxScore = 0;
     private int tries = 10;
+    private float wcard = 0;
+    private float hcard = 0;
 
     void Awake()
     {
-        StreamReader sr = new StreamReader(path);
-        //Чтение достижений народного хозяйства
-        if (sr != null) {
-            int i = 0;
-            while (!sr.EndOfStream) {
-                BufParam[i] = Convert.ToInt32(sr.ReadLine());
-                i++;
-            }
-             emountcups =BufParam[0];
-             emountpent =BufParam[1];
-             emountsword=BufParam[2];
-             emountwand =BufParam[3];
-             maxScore   =BufParam[4];
-}
+        BufParam =  Progress.getData();
+
+        emountcups  = BufParam[0];
+        emountpent  = BufParam[1];
+        emountsword = BufParam[2];
+        emountwand  = BufParam[3];
+        maxScore    = BufParam[4];
+        
 
         int[,] MapOfCards = Tassovaty(BufParam);//Map of cards and emount of it that will be playing
         //Set patron Arcan as 25th card
@@ -97,29 +93,35 @@ public class LevelGenerator : MonoBehaviour
         //Conecting drawing area
         Camera cam = GameObject.Find("Main Camera").GetComponent(typeof(Camera)) as Camera;
         cbs = cam.GetComponent(typeof(CameraBihevior)) as CameraBihevior;
-        
-        float xpos = cardSizeX * -2;//3f;
+        cbs.setOrtographicSet(false);
 
+        float xpos = cardSizeX * -2;//3f;
         float ypos = cardSizeY * -2 ;//-4.4f;
+
         for (int i = 0; i < 5; i++)
         {
             for (int j = 0; j < 5; j++)
             {
                 float[] posit = new float[2] { xpos + (cardSizeX * i), ypos + (cardSizeY * j) };
                 int num = i * 5 + j;
-                
                 SetOfCard[num] = Instantiate(SetOfCard[num], new Vector3(posit[0], posit[1], 0), Quaternion.identity) as GameObject;
                 CardBihevior CardBH = SetOfCard[num].GetComponent<CardBihevior>();
                 CardBH.StartPosition(posit);
                 CardBH.SetLinkToCard(SetOfCard[num]);
                 cbs.rost(SetOfCard[num].transform);
-
             }
         }
 
         setX = cardSizeX/2*(1-0.61f);
-        setY = cardSizeY/2*(1-0.61f);
+        wcard = cardSizeX*5+6*setX;
+        hcard = cardSizeY * 5 + 6 * setX;
+        setingparam();
+    }
 
+    private void setingparam() {
+        var koef = cbs.getaspect() * (reservSpaceY);
+        setY = setX / koef;
+        cbs.setCameraAngle(Mathf.Rad2Deg * Mathf.Atan2(Mathf.Abs(cbs.offset.z) , wcard));
     }
 
     private int[,] Tassovaty(int[] inArray)//создание масива карт что будут на поле
@@ -145,30 +147,9 @@ public class LevelGenerator : MonoBehaviour
         CardBihevior SecondChosenCard;
 
         bool stat;
+
+        setingparam();
         
-        var koef = cbs.getaspect() / (reservSpaceX/reservSpaceY);
-        
-        //minimum distance between cards 
-        setX = (setX >= cardSizeX / 4 * (1 - 0.61f)) ? roundFloat(setX) : roundFloat(cardSizeX / 4 * (1 - 0.61f));
-          
-        setY = roundFloat( setX /koef);
-
-
- 
-
-        //var w = cbs.GetMaxDistance(1);
-        //var h = cbs.GetMaxDistance(2);
-
-        //var wmax = roundFloat ( w * koef);
-        //var hmax = roundFloat ( h * koef);
-
-
-
-        //mAximum distance between cards
-        
-        
-        
-
         float[] a = { setX, setY };
         
         foreach (GameObject child in SetOfCard)
@@ -179,8 +160,7 @@ public class LevelGenerator : MonoBehaviour
             a[1] = (cardPos[1] / cardSizeY) * setY;
             ChildBihevior.SetPosition(a);
         }
-
-
+        
         if (BufCard1 != null) {
             FirstChosenCard = BufCard1.GetComponent<CardBihevior>();
             if (FirstChosenCard.ischosen) {
@@ -329,7 +309,28 @@ public class LevelGenerator : MonoBehaviour
     }
 
     /*
-       var cardasp = x / y;
+     * 
+     * 
+     * 
+     * 
+       
+    StreamReader sr = new StreamReader(path);
+        //Чтение достижений народного хозяйства
+        if (sr != null) {
+            int i = 0;
+            while (!sr.EndOfStream) {
+                BufParam[i] = Convert.ToInt32(sr.ReadLine());
+                i++;
+            }
+             emountcups =BufParam[0];
+             emountpent =BufParam[1];
+             emountsword=BufParam[2];
+             emountwand =BufParam[3];
+             maxScore   =BufParam[4];
+        }
+    
+    
+    var cardasp = x / y;
 
 
        if ((cardasp/cbs.getaspect())>1.00f || (cardasp / cbs.getaspect()) < 1.00f) {

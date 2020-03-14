@@ -22,80 +22,48 @@ public class CameraBihevior : MonoBehaviour
     // Start is called before the first frame update
     void Awake()
     {
+        
         cam = GetComponent<Camera>();
         camangle = cam.fieldOfView;
         OffsetY = 0;
         aprof = 80f;
         offset.y = 0.3f;
         offset.z = -10;
-        startBoundsSpace(cam.aspect);
         settingUpdater(aprof);
-        cam.fieldOfView = aprof;
         MashtabCofficient = 36.0f;
     }
-
-    private void startBoundsSpace(float aspect)
-    {
-        aspect = this.aspect;
-    }
-
-    private void setBoundsSpace(float aspect)
-    {
-        if (this.aspect != aspect)
-        {
-            aspect = this.aspect;
-        }
-    }
-    // Update is called once per frame
     void LateUpdate()
     {
         //float[] posit = GetMaxDistance();
         //        print("|x=" + posit[0] + "|y=" + posit[1]);
         transform.position = Vector3.SmoothDamp(transform.position, offset, ref velocity, smoothTime*Time.deltaTime);
-        settingUpdater(cam.fieldOfView);
-        
+        settingUpdater(aprof);
     }
 
- 
+    public void setOrtographicSet(bool a) {
+            cam.orthographic = a;
+    }
 
+    public void setCameraAngle(float a) {
+        aprof = setHorizontalAngle(a, getaspect());
+    }
    
-
     private void aperture(float anglew)
     {
-        
-        if (cam.orthographic != false)
-        {
-            cam.orthographic = false;
-        }
-
         //var coranglew = Mathf.Lerp();
-        cam.fieldOfView = Mathf.Lerp(cam.fieldOfView, anglew, Time.deltaTime);
-
+        cam.fieldOfView = Mathf.Lerp(cam.fieldOfView, anglew, Time.deltaTime*3);
     }
 
-    private void move(float ofsy)
+    private float setHorizontalAngle(float horizontalFOV, float aspect)
     {
-        // offset = ofsy;
-        //Vector3 CentPoint = getCentr();
-        //+CentPoint;
-    }
-
-    private float SetHorizontalAngle(float horizontalFOV, float aspect)
-    {
-        //float f = 
-        return Mathf.Rad2Deg * 2 * Mathf.Atan(Mathf.Tan((horizontalFOV * Mathf.Deg2Rad) / 2f) / aspect);
-        //return ((float)(int)(f * 100)) / 100;
+        float f = Mathf.Rad2Deg * 2 * Mathf.Atan(Mathf.Tan((horizontalFOV * Mathf.Deg2Rad) / 2f) / aspect);
+        //return
+        return ((float)(int)(f * 100)) / 100;
     }
 
     public float getaspect() {
+        aspect = cam.aspect;
         return aspect;
-    }
-
-    public float getkoef()
-    {
-
-        float koef = cam.aspect/(GetMaxDistance(1)/ GetMaxDistance(2));
-        return koef;
     }
 
     private void settingUpdaterInfo() {
@@ -112,13 +80,8 @@ public class CameraBihevior : MonoBehaviour
     }
 
     private void settingUpdater(float a) {
-        settingUpdaterInfo();
-
-        
-        aperture(roundFloat(a));
-
-
-        
+        //settingUpdaterInfo();
+        aperture(roundFloat(a));    
     }
 
     private float roundFloat(float n)
@@ -128,7 +91,7 @@ public class CameraBihevior : MonoBehaviour
 
     public void rost(Transform t)
     {
-                targets.Add(t);
+        targets.Add(t);
     }
 
     public float GetMaxDistance(int numb)
@@ -145,12 +108,12 @@ public class CameraBihevior : MonoBehaviour
             switch (numb)
             {
                 case 1:
-                    return posit = bounds.size.x;
+                    return posit = bounds.size.x ;
                 case 2:
-                    return posit = bounds.size.y;
+                    return posit = bounds.size.y ;
                 default:
                     if (numb%2==0)
-                        return posit = bounds.size.x/0.8f;
+                        return posit = bounds.size.x / 0.8f;
                     if (numb%2==1)
                         return posit = bounds.size.y / 0.8f;
                     break;

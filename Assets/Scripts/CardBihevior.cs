@@ -138,7 +138,7 @@ public class CardBihevior : MonoBehaviour
             //LvlGen.
         }
         if (flipBack) {//return to normal position
-                transform.Rotate(0, 3.1f * DirOfRotation, 0);
+            transform.Rotate(0, 3.1f * DirOfRotation, 0);
             axeY -= 3.1f;
             if ( axeY<0 )
             {
@@ -157,12 +157,16 @@ public class CardBihevior : MonoBehaviour
 
     void OnMouseDown()
     {
+        print("+");
         if (!isopen)
         {
+            print("++");
             if (isBlock == false)
             {
+                print("+++");
                 if (!ischosen)
                 {
+                    print("++++");
                     ischosen = true;
                     LvlGen.setChosenCard(go);
                 }
