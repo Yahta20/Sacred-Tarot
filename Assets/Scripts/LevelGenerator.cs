@@ -35,21 +35,22 @@ public class LevelGenerator : MonoBehaviour
 
     private int[] BufParam          = new int[5];
 
-    private int emountcups =1;
-    private int emountpent =1;
-    private int emountsword=1;
-    private int emountwand =1;
-    
-    
+    private long emountcups =0;
+    private long emountpent =0;
+    private long emountsword=0;
+    private long emountwand =0;
+    private long tries = 10;
     private long Score = 0;
     private long maxScore = 0;
-    private int tries = 10;
+    
+    
+
     private float wcard = 0;
     private float hcard = 0;
 
     void Awake()
     {
-        BufParam =  Progress.getData();
+        BufParam =  Progress.getCardData();
 
         emountcups  = BufParam[0];
         emountpent  = BufParam[1];
@@ -143,9 +144,6 @@ public class LevelGenerator : MonoBehaviour
         scoreLabel.text = Score.ToString();
         triesLabel.text = tries.ToString();
 
-        CardBihevior FirstChosenCard;
-        CardBihevior SecondChosenCard;
-
         bool stat;
 
         setingparam();
@@ -154,20 +152,96 @@ public class LevelGenerator : MonoBehaviour
         
         foreach (GameObject child in SetOfCard)
         {
-            CardBihevior ChildBihevior = child.GetComponent(typeof(CardBihevior)) as CardBihevior;
-            float[] cardPos = ChildBihevior.getPosition();
-            a[0] = (cardPos[0] / cardSizeX) * setX;
-            a[1] = (cardPos[1] / cardSizeY) * setY;
-            ChildBihevior.SetPosition(a);
+            if (child != null)
+            {
+                CardBihevior ChildBihevior = child.GetComponent(typeof(CardBihevior)) as CardBihevior;
+                float[] cardPos = ChildBihevior.getPosition();
+                a[0] = (cardPos[0] / cardSizeX) * setX;
+                a[1] = (cardPos[1] / cardSizeY) * setY;
+                ChildBihevior.SetPosition(a);
+
+            } 
         }
         
         if (BufCard1 != null) {
-            FirstChosenCard = BufCard1.GetComponent<CardBihevior>();
-            if (FirstChosenCard.ischosen) {
+            CardBihevior FirstChosenCard = BufCard1.GetComponent<CardBihevior>();
+            print("allo0");
+            if (FirstChosenCard.Openstate())
+            {
+                LockAllCards(false);
+                print("allo");
+            }
+            else {
+                print("allo1");
+                LockAllCards(true);
+            }
+        }
+
+        if (BufCard2 != null)
+        {
+            CardBihevior SecondChosenCard = BufCard1.GetComponent<CardBihevior>();
+
+            if (SecondChosenCard.Openstate())
+            {
+                LockAllCards(false);
+                
+            }
+            else
+            {
+                
+                LockAllCards(true);
+            }
+        }
+
+        if (BufCard1 != null & BufCard2 != null) {
+            LockAllCards(true);
+            CardBihevior ACard = BufCard1.GetComponent<CardBihevior>();
+            CardBihevior BCard = BufCard2.GetComponent<CardBihevior>();
+            
+            if (ACard.Openstate() && BCard.Openstate()) {
+                
+                if (BufCard1.name == BufCard2.name)//Если две карты одинаковые.
+                {
+                    //destruction
+
+                    int fCardClick = ACard.GetCliks();
+                    int sCardClick = BCard.GetCliks();
+                    int c = (fCardClick * 5) + (sCardClick * 5) - 10;
+                    c = 30 - c;
+                    if (c < 0)
+                    {
+                        c = 0;
+                    }
+                    Score += c;
+
+                    ACard.Death();
+                    BCard.Death();
+
+                    float[] fc = ACard.getPosition();
+                    float[] sc = BCard.getPosition();
+                    GameObject Splash1 = Instantiate(PartSys, new Vector3(fc[0], fc[1], 0), Quaternion.identity) as GameObject;
+                    GameObject Splash2 = Instantiate(PartSys, new Vector3(sc[0], sc[1], 0), Quaternion.identity) as GameObject;
+                    Destroy(Splash1, 4);
+                    Destroy(Splash2, 4);
+                    Destroy(BufCard1, 1.5f);
+                    Destroy(BufCard2, 1.5f);
+                    tries++;
+
+                }
+                if (BufCard1.name != BufCard2.name)
+                {
+                    ACard.notAcouple();
+                    BCard.notAcouple();
+                    tries--;
+                }
+
+                LockAllCards(false);
+                BufCard1 = null;
+                BufCard2 = null;
                 LockAllCards(false);
             }
-
         }
+
     }
 
     private void LockAllCards(bool b) {
@@ -300,7 +374,8 @@ public class LevelGenerator : MonoBehaviour
             BufCard1 = go;
             LockAllCards(true);
         } else if (BufCard2 == null) {
-
+            BufCard2 = go;
+            LockAllCards(true);
         }
     }
 

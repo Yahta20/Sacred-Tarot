@@ -64,11 +64,11 @@ ScriptsOnlyBuild:
     - Class: 114
       Script: {instanceID: 10924}
     - Class: 114
-      Script: {instanceID: 11244}
+      Script: {instanceID: 11246}
     - Class: 114
-      Script: {instanceID: 11272}
+      Script: {instanceID: 11274}
     - Class: 114
-      Script: {instanceID: 11638}
+      Script: {instanceID: 11640}
     - Class: 115
       Script: {instanceID: 0}
     - Class: 128
@@ -129,9 +129,9 @@ ScriptsOnlyBuild:
     - Class: 114
       Script: {instanceID: 11024}
     - Class: 114
-      Script: {instanceID: 11244}
+      Script: {instanceID: 11246}
     - Class: 114
-      Script: {instanceID: 11638}
+      Script: {instanceID: 11640}
     - Class: 115
       Script: {instanceID: 0}
     - Class: 128
@@ -643,4 +643,4 @@ ScriptsOnlyBuild:
   scenePathNames:
   - Assets/Scenes/Start.unity
   - Assets/Scenes/Level.unity
-  playerPath: D:/Games/unity/Sacred Tarot-20190712T094614Z-001/Sacred Tarot/examp/v0.0.2.apk
+  playerPath: D:/Games/unity/Sacred Tarot-20190712T094614Z-001/Sacred Tarot/examp/st_v0.0.3.apk

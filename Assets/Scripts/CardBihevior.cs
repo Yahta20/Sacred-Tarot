@@ -28,8 +28,8 @@ public class CardBihevior : MonoBehaviour
 
     private float[] posit = new float[2];
 
-    private int DirOfRotation = 0;
-    private int TotalClicks = 0;
+    private int dirOfRotation = 0;
+    private ushort TotalClicks = 0;
 
     public void Death() {
         deathtime = true;
@@ -89,16 +89,9 @@ public class CardBihevior : MonoBehaviour
         ischosen = false;
         deathtime = false;
         flipBack = false;
-
+        axeY = transform.rotation.y;
         //go = GetComponent<GameObject>();
-        //while (dirofrotation == 0)
-        //{
-        //    dirofrotation = random.range(-50, 50);
-        //    if (dirofrotation != 0)
-        //    {
-        //        dirofrotation = dirofrotation / mathf.abs(dirofrotation);
-        //    }
-        //}
+        
 
     }
 
@@ -107,9 +100,67 @@ public class CardBihevior : MonoBehaviour
         transform.position = Vector3.SmoothDamp(transform.position, offset, ref velocity, smoothTime * Time.deltaTime);
         
         if (deathtime) {
-            transform.Rotate(0, f * DirOfRotation, 0);
-            f += 0.5f+Mathf.Sin(Mathf.PI/6);
+            
+            axeY += 10f+Mathf.Sin(Mathf.PI/6);
         }
+        if (ischosen) {
+            axeY = Mathf.LerpAngle(axeY, 180, 0.05f);
+            if (axeY>170.95f) {
+                print("cho");
+                isopen = true;
+                ischosen = false;
+                isBlock = true;
+                TotalClicks++;
+                axeY = 180;
+            }
+        }
+        if (flipBack) {
+
+
+            axeY = Mathf.LerpAngle(axeY, 0, 0.1f);
+            //print(axeY+" flipBack "+go.name);
+            if (axeY > 340.0f)
+            {
+                print("Koroche");
+                axeY = 0;
+                isopen = false;
+                ischosen = false;
+                flipBack = false;
+                isBlock = false;
+            }
+
+   
+        }
+        transform.eulerAngles = new Vector3(0, axeY, 0);
+    }
+
+
+    void OnMouseDown()
+    {
+      //  print("1");
+        if (!isopen)
+        {
+        //    print("2");
+            if (isBlock == false)
+            {
+          //      print("3");
+                if (!ischosen)
+                {
+            //        print("4");
+                    ischosen = true;
+                    LvlGen.setChosenCard(go);
+                }
+            }
+        }
+    }
+
+    void Canvas()
+    {
+        
+    }
+/*
+ 
+     
         if (ischosen) {
             //if card is chosen
             transform.Rotate(0,4.5f*DirOfRotation,0);
@@ -152,31 +203,10 @@ public class CardBihevior : MonoBehaviour
             }   
             
         }
-
-    }
-
-    void OnMouseDown()
-    {
-        print("+");
-        if (!isopen)
-        {
-            print("++");
-            if (isBlock == false)
-            {
-                print("+++");
-                if (!ischosen)
-                {
-                    print("++++");
-                    ischosen = true;
-                    LvlGen.setChosenCard(go);
-                }
-            }
-        }
-    }
-
-    void Canvas()
-    {
-        
-    }
-
+     
+     
+     
+     
+     
+     */
 }
