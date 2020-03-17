@@ -643,4 +643,4 @@ ScriptsOnlyBuild:
   scenePathNames:
   - Assets/Scenes/Start.unity
   - Assets/Scenes/Level.unity
-  playerPath: D:/Games/unity/Sacred Tarot-20190712T094614Z-001/Sacred Tarot/examp/st_v0.0.3.apk
+  playerPath: D:/Games/unity/Sacred Tarot-20190712T094614Z-001/Sacred Tarot/examp/st_v0.0.4.apk

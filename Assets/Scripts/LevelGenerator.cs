@@ -39,7 +39,7 @@ public class LevelGenerator : MonoBehaviour
     private long emountpent =0;
     private long emountsword=0;
     private long emountwand =0;
-    private long tries = 10;
+    private long tries = 0;
     private long Score = 0;
     private long maxScore = 0;
     
@@ -57,7 +57,14 @@ public class LevelGenerator : MonoBehaviour
         emountsword = BufParam[2];
         emountwand  = BufParam[3];
         maxScore    = BufParam[4];
-        
+        tries = BufParam[5];
+        if (BufParam[4]==0) {
+            //Welcome canvas
+            //Lor of game
+            print("hello");
+            tries = 5;
+        }
+
 
         int[,] MapOfCards = Tassovaty(BufParam);//Map of cards and emount of it that will be playing
         //Set patron Arcan as 25th card
@@ -116,10 +123,10 @@ public class LevelGenerator : MonoBehaviour
         setX = cardSizeX/2*(1-0.61f);
         wcard = cardSizeX*5+6*setX;
         hcard = cardSizeY * 5 + 6 * setX;
-        setingparam();
+        settingParam();
     }
 
-    private void setingparam() {
+    private void settingParam() {
         var koef = cbs.getaspect() * (reservSpaceY);
         setY = setX / koef;
         cbs.setCameraAngle(Mathf.Rad2Deg * Mathf.Atan2(Mathf.Abs(cbs.offset.z) , wcard));
@@ -141,15 +148,35 @@ public class LevelGenerator : MonoBehaviour
     
     void LateUpdate()
     {
+        //android ramsy
+        if (Application.platform == RuntimePlatform.Android)
+        {
+            if (Input.GetKey(KeyCode.Home))
+            {
+                Application.LoadLevel("Start");
+                return;
+            }
+            if (Input.GetKey(KeyCode.Escape))
+            {
+                Application.LoadLevel("Level");
+                return;
+            }
+            /*if ( Input.GetKey(KeyCode.Menu)) {
+                tries++;
+            }*/
+        }
+
+
+        //Updating data of game
         scoreLabel.text = Score.ToString();
         triesLabel.text = tries.ToString();
+        Progress.setEmountTries((byte)(tries >> 8));
+        if (Score > BufParam[5]) { Progress.setEmountmaxScore(Score); tries += 5; }
 
-        bool stat;
-
-        setingparam();
+        settingParam();
         
         float[] a = { setX, setY };
-        
+        //Set card position whith steps cards
         foreach (GameObject child in SetOfCard)
         {
             if (child != null)
@@ -165,14 +192,14 @@ public class LevelGenerator : MonoBehaviour
         
         if (BufCard1 != null) {
             CardBihevior FirstChosenCard = BufCard1.GetComponent<CardBihevior>();
-            print("allo0");
+            //print("allo0");
             if (FirstChosenCard.Openstate())
             {
                 LockAllCards(false);
-                print("allo");
+              //  print("allo");
             }
             else {
-                print("allo1");
+                //print("allo1");
                 LockAllCards(true);
             }
         }
@@ -192,7 +219,7 @@ public class LevelGenerator : MonoBehaviour
                 LockAllCards(true);
             }
         }
-
+        //sravnenie of cards 
         if (BufCard1 != null & BufCard2 != null) {
             LockAllCards(true);
             CardBihevior ACard = BufCard1.GetComponent<CardBihevior>();

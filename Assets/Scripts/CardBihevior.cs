@@ -104,7 +104,7 @@ public class CardBihevior : MonoBehaviour
             axeY += 10f+Mathf.Sin(Mathf.PI/6);
         }
         if (ischosen) {
-            axeY = Mathf.LerpAngle(axeY, 180, 0.05f);
+            axeY = Mathf.LerpAngle(axeY, 180, 0.15f);
             if (axeY>170.95f) {
                 print("cho");
                 isopen = true;
@@ -117,7 +117,7 @@ public class CardBihevior : MonoBehaviour
         if (flipBack) {
 
 
-            axeY = Mathf.LerpAngle(axeY, 0, 0.1f);
+            axeY = Mathf.LerpAngle(axeY, 0, 0.38f);
             //print(axeY+" flipBack "+go.name);
             if (axeY > 340.0f)
             {
