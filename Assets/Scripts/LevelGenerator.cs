@@ -35,6 +35,8 @@ public class LevelGenerator : MonoBehaviour
 
     private int[] BufParam          = new int[5];
 
+    private byte deletedCards = 0;
+
     private long emountcups =0;
     private long emountpent =0;
     private long emountsword=0;
@@ -42,11 +44,16 @@ public class LevelGenerator : MonoBehaviour
     private long tries = 0;
     private long Score = 0;
     private long maxScore = 0;
+
+
+    private bool beatMaxScore = false;
     
     
 
     private float wcard = 0;
     private float hcard = 0;
+
+    //system functions
 
     void Awake()
     {
@@ -56,69 +63,24 @@ public class LevelGenerator : MonoBehaviour
         emountpent  = BufParam[1];
         emountsword = BufParam[2];
         emountwand  = BufParam[3];
-        maxScore    = BufParam[4];
         tries = BufParam[5];
-        if (BufParam[4]==0) {
+        if (BufParam[4] == 0)
+        {
             //Welcome canvas
             //Lor of game
-            print("hello");
+            //print("Max score is 2000");
+            maxScore    = 2000;
+            Progress.setEmountMaxScore(BufParam[4]); 
+        }
+        if (BufParam[5]==0) {
+            //Welcome canvas
+            //Lor of game
+            //print("hello");
             tries = 5;
         }
 
 
-        int[,] MapOfCards = Tassovaty(BufParam);//Map of cards and emount of it that will be playing
-        //Set patron Arcan as 25th card
-        SetOfCard[24] = HighArcCard[UnityEngine.Random.Range(0, HighArcCard.Length)];
-        //CardPack[0,0] = HighArcCard[UnityEngine.Random.Range(0, HighArcCard.Length)];
-        //Создание масива карт
-        for (int i = 0; i < 12; i++) {
-            switch (MapOfCards[i, 1]) {
-                case 0:
-                    SetOfCard[i] = CupArcCard[MapOfCards[i, 0]];
-                    SetOfCard[i + 12] = CupArcCard[MapOfCards[i, 0]];
-                    break;
-                case 1:
-                    SetOfCard[i] = PentArcCard[MapOfCards[i, 0]];
-                    SetOfCard[i + 12] = PentArcCard[MapOfCards[i, 0]];
-                    break;
-                case 2:
-                    SetOfCard[i] = SwordArcCard[MapOfCards[i, 0]];
-                    SetOfCard[i + 12] = SwordArcCard[MapOfCards[i, 0]];
-                    break;
-                case 3:
-                    SetOfCard[i] = WandArcCard[MapOfCards[i, 0]];
-                    SetOfCard[i + 12] = WandArcCard[MapOfCards[i, 0]];
-                    break;
-            }
-        }
-        //Перемешивание карт
-        for (int i = 0; i < 25; i++) {
-            GameObject tmp = SetOfCard[i];
-            int r = UnityEngine.Random.Range(i, SetOfCard.Length);
-            SetOfCard[i] = SetOfCard[r];
-            SetOfCard[r] = tmp;
-        }
-        //Conecting drawing area
-        Camera cam = GameObject.Find("Main Camera").GetComponent(typeof(Camera)) as Camera;
-        cbs = cam.GetComponent(typeof(CameraBihevior)) as CameraBihevior;
-        cbs.setOrtographicSet(false);
-
-        float xpos = cardSizeX * -2;//3f;
-        float ypos = cardSizeY * -2 ;//-4.4f;
-
-        for (int i = 0; i < 5; i++)
-        {
-            for (int j = 0; j < 5; j++)
-            {
-                float[] posit = new float[2] { xpos + (cardSizeX * i), ypos + (cardSizeY * j) };
-                int num = i * 5 + j;
-                SetOfCard[num] = Instantiate(SetOfCard[num], new Vector3(posit[0], posit[1], 0), Quaternion.identity) as GameObject;
-                CardBihevior CardBH = SetOfCard[num].GetComponent<CardBihevior>();
-                CardBH.StartPosition(posit);
-                CardBH.SetLinkToCard(SetOfCard[num]);
-                cbs.rost(SetOfCard[num].transform);
-            }
-        }
+        publishCards();
 
         setX = cardSizeX/2*(1-0.61f);
         wcard = cardSizeX*5+6*setX;
@@ -126,39 +88,19 @@ public class LevelGenerator : MonoBehaviour
         settingParam();
     }
 
-    private void settingParam() {
-        var koef = cbs.getaspect() * (reservSpaceY);
-        setY = setX / koef;
-        cbs.setCameraAngle(Mathf.Rad2Deg * Mathf.Atan2(Mathf.Abs(cbs.offset.z) , wcard));
-    }
-
-    private int[,] Tassovaty(int[] inArray)//создание масива карт что будут на поле
-    {
-        int[,] cardEmount = new int[12, 2];
-
-        for (int i = 0; i < 12; i++) {
-            int Masty = UnityEngine.Random.Range(0, 4);//chose of cardmark 
-            int nomerCarty = UnityEngine.Random.Range(0, inArray[Masty]);//Random making of new card
-            cardEmount[i, 0] = nomerCarty;
-            cardEmount[i, 1] = Masty;
-        }
-
-        return cardEmount;
-    }
-    
     void LateUpdate()
     {
         //android ramsy
         if (Application.platform == RuntimePlatform.Android)
         {
-            if (Input.GetKey(KeyCode.Home))
-            {
-                Application.LoadLevel("Start");
-                return;
-            }
+            //if (Input.GetKey(KeyCode.Home))
+            //{
+            //    Application.LoadLevel("Start");
+            //    return;
+            //}
             if (Input.GetKey(KeyCode.Escape))
             {
-                Application.LoadLevel("Level");
+                Application.LoadLevel("Start");
                 return;
             }
             /*if ( Input.GetKey(KeyCode.Menu)) {
@@ -168,15 +110,17 @@ public class LevelGenerator : MonoBehaviour
 
 
         //Updating data of game
-        scoreLabel.text = Score.ToString();
-        triesLabel.text = tries.ToString();
-        Progress.setEmountTries((byte)(tries >> 8));
-        if (Score > BufParam[5]) { Progress.setEmountmaxScore(Score); tries += 5; }
 
+        updateSave();
         settingParam();
-        
+        print(deletedCards);
+        if (deletedCards == 25) {
+            publishCards();
+            deletedCards = 0;
+        }
         float[] a = { setX, setY };
         //Set card position whith steps cards
+        deletedCards = 0;
         foreach (GameObject child in SetOfCard)
         {
             if (child != null)
@@ -186,15 +130,20 @@ public class LevelGenerator : MonoBehaviour
                 a[0] = (cardPos[0] / cardSizeX) * setX;
                 a[1] = (cardPos[1] / cardSizeY) * setY;
                 ChildBihevior.SetPosition(a);
-
-            } 
+            }
+            else {
+                deletedCards++;
+            }
+            
         }
         
         if (BufCard1 != null) {
             CardBihevior FirstChosenCard = BufCard1.GetComponent<CardBihevior>();
+            CheckOfArkan(BufCard1,0);
             //print("allo0");
             if (FirstChosenCard.Openstate())
             {
+                
                 LockAllCards(false);
               //  print("allo");
             }
@@ -220,13 +169,15 @@ public class LevelGenerator : MonoBehaviour
             }
         }
         //sravnenie of cards 
-        if (BufCard1 != null & BufCard2 != null) {
+        if (BufCard1 != null & BufCard2 != null)
+        {
             LockAllCards(true);
             CardBihevior ACard = BufCard1.GetComponent<CardBihevior>();
             CardBihevior BCard = BufCard2.GetComponent<CardBihevior>();
-            
-            if (ACard.Openstate() && BCard.Openstate()) {
-                
+
+            if (ACard.Openstate() && BCard.Openstate())
+            {
+
                 if (BufCard1.name == BufCard2.name)//Если две карты одинаковые.
                 {
                     //destruction
@@ -240,7 +191,7 @@ public class LevelGenerator : MonoBehaviour
                         c = 0;
                     }
                     Score += c;
-
+                    // make own procedure for single card
                     ACard.Death();
                     BCard.Death();
 
@@ -262,15 +213,126 @@ public class LevelGenerator : MonoBehaviour
                     tries--;
                 }
 
-                LockAllCards(false);
+
                 BufCard1 = null;
                 BufCard2 = null;
-                LockAllCards(false);
             }
+        }
+        else {
+
+                LockAllCards(false);
         }
 
     }
 
+    private void publishCards()
+    {
+        int[,] MapOfCards = Tassovaty(BufParam);//Map of cards and emount of it that will be playing
+        //Set patron Arcan as 25th card
+        SetOfCard[24] = HighArcCard[UnityEngine.Random.Range(0, HighArcCard.Length)];
+        //CardPack[0,0] = HighArcCard[UnityEngine.Random.Range(0, HighArcCard.Length)];
+        //Создание масива карт
+        for (int i = 0; i < 12; i++)
+        {
+            switch (MapOfCards[i, 1])
+            {
+                case 0:
+                    SetOfCard[i] = CupArcCard[MapOfCards[i, 0]];
+                    SetOfCard[i + 12] = CupArcCard[MapOfCards[i, 0]];
+                    break;
+                case 1:
+                    SetOfCard[i] = PentArcCard[MapOfCards[i, 0]];
+                    SetOfCard[i + 12] = PentArcCard[MapOfCards[i, 0]];
+                    break;
+                case 2:
+                    SetOfCard[i] = SwordArcCard[MapOfCards[i, 0]];
+                    SetOfCard[i + 12] = SwordArcCard[MapOfCards[i, 0]];
+                    break;
+                case 3:
+                    SetOfCard[i] = WandArcCard[MapOfCards[i, 0]];
+                    SetOfCard[i + 12] = WandArcCard[MapOfCards[i, 0]];
+                    break;
+            }
+        }
+        //Перемешивание карт
+        for (int i = 0; i < 25; i++)
+        {
+            GameObject tmp = SetOfCard[i];
+            int r = UnityEngine.Random.Range(i, SetOfCard.Length);
+            SetOfCard[i] = SetOfCard[r];
+            SetOfCard[r] = tmp;
+        }
+        //Conecting drawing area
+        Camera cam = GameObject.Find("Main Camera").GetComponent(typeof(Camera)) as Camera;
+        cbs = cam.GetComponent(typeof(CameraBihevior)) as CameraBihevior;
+        cbs.setOrtographicSet(false);
+
+        float xpos = cardSizeX * -2;//3f;
+        float ypos = cardSizeY * -2;//-4.4f;
+
+        for (int i = 0; i < 5; i++)
+        {
+            for (int j = 0; j < 5; j++)
+            {
+                float[] posit = new float[2] { xpos + (cardSizeX * i), ypos + (cardSizeY * j) };
+                int num = i * 5 + j;
+                SetOfCard[num] = Instantiate(SetOfCard[num], new Vector3(posit[0], posit[1], 0), Quaternion.identity) as GameObject;
+                CardBihevior CardBH = SetOfCard[num].GetComponent<CardBihevior>();
+                CardBH.StartPosition(posit);
+                CardBH.SetLinkToCard(SetOfCard[num]);
+                cbs.rost(SetOfCard[num].transform);
+            }
+        }
+    }
+
+
+    //public functions
+    public void setChosenCard(GameObject go) {
+        if (BufCard1 == null) {
+            BufCard1 = go;
+            LockAllCards(true);
+        } else if (BufCard2 == null) {
+            BufCard2 = go;
+            LockAllCards(true);
+        }
+    }
+
+    public void updateSave() {
+
+        scoreLabel.text = Score.ToString();
+        triesLabel.text = tries.ToString();
+        Progress.setEmountTries((byte)(tries >> 8));
+        if (Score > BufParam[4] & !beatMaxScore) { Progress.setEmountMaxScore(Score); tries += 5; beatMaxScore = true; }
+
+    }
+
+
+    //private functions
+
+    private int[,] Tassovaty(int[] inArray)//создание масива карт что будут на поле
+    {
+        int[,] cardEmount = new int[12, 2];
+
+        for (int i = 0; i < 12; i++) {
+            int Masty = UnityEngine.Random.Range(0, 4);//chose of cardmark 
+            int nomerCarty = UnityEngine.Random.Range(0, inArray[Masty]);//Random making of new card
+            cardEmount[i, 0] = nomerCarty;
+            cardEmount[i, 1] = Masty;
+        }
+
+        return cardEmount;
+    }
+
+    private void settingParam() {
+        var koef = cbs.getaspect() * (reservSpaceY);
+        setY = setX / koef;
+        cbs.setCameraAngle(Mathf.Rad2Deg * Mathf.Atan2(Mathf.Abs(cbs.offset.z) , wcard));
+    }
+
+    private float roundFloat(float n) {
+        return ((float)(int)(n * 100)) / 100;
+    }
+    
     private void LockAllCards(bool b) {
         ///Locking or Unlocking all cards by putting bool charakter
         
@@ -284,8 +346,8 @@ public class LevelGenerator : MonoBehaviour
 
         }
     }
-
-    private void CheckOfArkan(GameObject go) {
+    
+    private void CheckOfArkan(GameObject go, byte numberInBuffer ) {
         int em = 0;
         for (int m = 0; m < 25; m++) // узнаем сколько карт открыто
         {
@@ -294,10 +356,11 @@ public class LevelGenerator : MonoBehaviour
                 em++;
             }
         }
-        float pX= go.transform.position.x;
-        float pY = go.transform.position.y;
+
         CardBihevior bihevCard = go.GetComponent<CardBihevior>();
-        Debug.Log( go.name);
+        float[] position = bihevCard.getPosition();
+        int chanseOption = UnityEngine.Random.Range(0, 100);
+        chanseOption = (chanseOption % 2 == 0) ? chanseOption = 0 : chanseOption = 1;
         switch (go.name)
         {
             case "moon(Clone)":
@@ -320,40 +383,19 @@ public class LevelGenerator : MonoBehaviour
 
                 break;
             case "sun(Clone)":
-                //количество открытых карт
-                GameObject[] cardtoopen = new GameObject[8];
-                if (em == 0)
-                {
-                    Score += 190;
-                    int v = 0;
-                    for (int i = 0; i > 25; i++) {//Создание списка карт
-                        
-                            if (go.name != SetOfCard[i].name) {
-                                if (SetOfCard[i].transform.position.y == pY | SetOfCard[i].transform.position.x == pX)
-                                {
-                                    cardtoopen[v] = SetOfCard[i];
-                                Debug.Log(v + cardtoopen[v].name);
-                                }
-                            }
-                        
-                    }
-                    for (int i=0;i> cardtoopen.Length;i++) {
-                        CardBihevior cb = cardtoopen[i].GetComponent<CardBihevior>();
-                        cb.ischosen=true;
-                    }
 
-                }
+                bihevCard.Death();
+                Score += 190;
+                
 
-                if (em >= 2 & em <= 23)
-                {
-                    Score += 100;
-                }
-
-                if (em == 24)
-                {
-                    Score += 190;
-                }
-
+                float[] fc = bihevCard.getPosition();
+                
+                GameObject Splash1 = Instantiate(PartSys, new Vector3(fc[0], fc[1], 0), Quaternion.identity) as GameObject;
+                Destroy(Splash1, 4);
+                Destroy(go, 1.0f);
+                BufCard1 = null;
+                LockAllCards(false);
+                tries++;
                 break;
             case "star(Clone)":
                 //количество открытых карт
@@ -396,20 +438,84 @@ public class LevelGenerator : MonoBehaviour
         }
     }
 
-    public void setChosenCard(GameObject go) {
-        if (BufCard1 == null) {
-            BufCard1 = go;
-            LockAllCards(true);
-        } else if (BufCard2 == null) {
-            BufCard2 = go;
-            LockAllCards(true);
+
+    //Sun
+    /*
+    GameObject[] cardSunOpen = new GameObject[4];
+    GameObject[] card2Open = new GameObject[4];
+    byte num = 0;
+    //print ( num);
+    //make list of cards to open
+    foreach (GameObject loopObj in SetOfCard)//(int i = 0; i > 25; i++)
+    {
+        if (loopObj != null) {
+            if (numberInBuffer==0) {
+                if (go.name != loopObj.name)
+                {
+                    if (chanseOption == 0)
+                    {
+                        if (loopObj.transform.position.y == position[1] )
+                        {
+                            print(loopObj.transform.position.x);
+                            cardSunOpen[num] = loopObj;
+                            num++;
+                        }
+                    }
+                    else {
+                        if (loopObj.transform.position.x == position[0])
+                        {
+                            print(loopObj.transform.position.x);
+                            cardSunOpen[num] = loopObj;
+                            num++;
+                        }
+                    }
+                }
+            }
+
+        }
+    }
+    num = 0;
+    foreach (GameObject lObj in cardSunOpen) {
+        foreach (GameObject loopObj in SetOfCard)
+        {
+            if (num == card2Open.Length-1) {
+                print(num);
+                break;
+            }
+            if (lObj != loopObj) {
+                if (lObj.name == loopObj.name) {
+                    card2Open[num] = loopObj;
+                    print(card2Open.Length);
+                    num++;    
+                }
+            }
+
         }
     }
 
-    private float roundFloat(float n) {
-        return ((float)(int)(n * 100)) / 100;
+    foreach (GameObject loopObj in card2Open) {
+        CardBihevior Card = loopObj.GetComponent<CardBihevior>();
+        Card.Death();
     }
 
+    if (em == 0)
+    {
+        Score += 190;
+    }
+
+    if (em >= 2 & em < 24)
+    {
+        Score += 100;
+    }
+
+    if (em == 24)
+    {
+        Score += 190;
+    }
+
+    */
+
+    //Stuff
     /*
      * 
      * 

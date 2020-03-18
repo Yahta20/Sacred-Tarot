@@ -16,8 +16,7 @@ public static class Progress
     public static ushort emountLightPents   ;
     public static ushort emountLightSwords  ;
     public static ushort emountLightWands   ;
-
-
+    
     public static long maxScore   ;
 
     public static int[] getCardData() {return new int[6] { emountOfCups, emountOfPent, emountOfSword, emountOfWand, (int)maxScore, emountOfTries };}
@@ -34,5 +33,5 @@ public static class Progress
     public static void setEmountLightSwords (ushort l){emountLightSwords=l;}
     public static void setEmountLightWands  (ushort l){emountLightWands =l;}
 
-    public static void setEmountmaxScore(long i) {maxScore   =i; }
+    public static void setEmountMaxScore(long i) {maxScore   =i; }
 }

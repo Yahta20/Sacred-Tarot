@@ -66,6 +66,10 @@ public class CardBihevior : MonoBehaviour
 
     }
 
+    public void setOpen(bool b) {
+        b = isopen;
+    }
+
     public bool Openstate() {
         return isopen;
     }
@@ -100,13 +104,13 @@ public class CardBihevior : MonoBehaviour
         transform.position = Vector3.SmoothDamp(transform.position, offset, ref velocity, smoothTime * Time.deltaTime);
         
         if (deathtime) {
-            
-            axeY += 10f+Mathf.Sin(Mathf.PI/6);
+            f += Time.deltaTime;
+            axeY += 10f+(f * f+10 + Time.deltaTime);
         }
         if (ischosen) {
             axeY = Mathf.LerpAngle(axeY, 180, 0.15f);
             if (axeY>170.95f) {
-                print("cho");
+                
                 isopen = true;
                 ischosen = false;
                 isBlock = true;
@@ -121,7 +125,7 @@ public class CardBihevior : MonoBehaviour
             //print(axeY+" flipBack "+go.name);
             if (axeY > 340.0f)
             {
-                print("Koroche");
+               
                 axeY = 0;
                 isopen = false;
                 ischosen = false;

@@ -633,12 +633,14 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Scripts\CameraBihevior.cs" />
     <Compile Include="Assets\Scripts\cameraBS.cs" />
     <Compile Include="Assets\Scripts\CardBihevior.cs" />
     <Compile Include="Assets\Scripts\GameManager.cs" />
     <Compile Include="Assets\Scripts\LevelGenerator.cs" />
     <Compile Include="Assets\Scripts\MoonCardBihevior.cs" />
     <Compile Include="Assets\Scripts\pentRot.cs" />
+    <Compile Include="Assets\Scripts\Progress.cs" />
     <Compile Include="Assets\Scripts\StarCardBihevior.cs" />
     <Compile Include="Assets\Scripts\SunCardBihevior.cs" />
     <Compile Include="Assets\Scripts\TowerCardBihevior.cs" />
