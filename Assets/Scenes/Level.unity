@@ -1272,6 +1272,10 @@ MonoBehaviour:
   PartSys: {fileID: 8778265408337617992, guid: 6f285a8fb9a08384a93e51ce614b9ceb, type: 3}
   scoreLabel: {fileID: 848358040}
   triesLabel: {fileID: 1830185034}
+  SemLightLabel: {fileID: 96633933}
+  CemLightLabel: {fileID: 1170471593}
+  PemLightLabel: {fileID: 2025709757}
+  WemLightLabel: {fileID: 823707575}
   cardSizeX: 1.3
   cardSizeY: 2
   setX: 0

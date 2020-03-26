@@ -14,6 +14,7 @@ ScriptsOnlyBuild:
     - UnityEditor.Tilemaps.TileDragAndDropManager
     UnityEditor.TestRunner.dll:
     - UnityEditor.TestTools.TestRunner.Api.CallbacksHolder
+    - UnityEditor.TestTools.TestRunner.TestListCacheData
     UnityEngine.UI.dll:
     - UnityEngine.EventSystems.EventSystem
     - UnityEngine.EventSystems.StandaloneInputModule
@@ -59,15 +60,15 @@ ScriptsOnlyBuild:
     - Class: 114
       Script: {instanceID: 9862}
     - Class: 114
-      Script: {instanceID: 10340}
+      Script: {instanceID: 10342}
     - Class: 114
-      Script: {instanceID: 10926}
+      Script: {instanceID: 10928}
     - Class: 114
-      Script: {instanceID: 11248}
+      Script: {instanceID: 11250}
     - Class: 114
-      Script: {instanceID: 11276}
+      Script: {instanceID: 11278}
     - Class: 114
-      Script: {instanceID: 11642}
+      Script: {instanceID: 11644}
     - Class: 115
       Script: {instanceID: 0}
     - Class: 128
@@ -120,17 +121,17 @@ ScriptsOnlyBuild:
     - Class: 114
       Script: {instanceID: 9902}
     - Class: 114
-      Script: {instanceID: 10340}
+      Script: {instanceID: 10342}
     - Class: 114
-      Script: {instanceID: 10712}
+      Script: {instanceID: 10714}
     - Class: 114
-      Script: {instanceID: 10742}
+      Script: {instanceID: 10744}
     - Class: 114
-      Script: {instanceID: 11026}
+      Script: {instanceID: 11028}
     - Class: 114
-      Script: {instanceID: 11248}
+      Script: {instanceID: 11250}
     - Class: 114
-      Script: {instanceID: 11642}
+      Script: {instanceID: 11644}
     - Class: 115
       Script: {instanceID: 0}
     - Class: 128
@@ -242,18 +243,6 @@ ScriptsOnlyBuild:
     assemblyName: Unity.TextMeshPro.dll
     namespaceName: TMPro
     className: TMP_InputField
-  - hash:
-      serializedVersion: 2
-      Hash: 71bb6a6b6c8f052f948db64c7dd3ca4f
-    assemblyName: UnityEngine.Advertisements.dll
-    namespaceName: UnityEngine.Advertisements
-    className: CallbackExecutor
-  - hash:
-      serializedVersion: 2
-      Hash: 71bb6a6b6c8f052f948db64c7dd3ca4f
-    assemblyName: UnityEngine.Advertisements.dll
-    namespaceName: UnityEngine.Advertisements.Editor
-    className: Placeholder
   - hash:
       serializedVersion: 2
       Hash: 7ab0e790220bdca831fdd886b339039d
@@ -532,7 +521,7 @@ ScriptsOnlyBuild:
     className: BeforeAfterTestCommandState
   - hash:
       serializedVersion: 2
-      Hash: 91167a320d42c0ce55b89a1b90cd8cfe
+      Hash: 797ba178a8fa7218a8f52b83de482406
     assemblyName: Assembly-CSharp.dll
     namespaceName: 
     className: LevelGenerator
@@ -654,4 +643,4 @@ ScriptsOnlyBuild:
   scenePathNames:
   - Assets/Scenes/Start.unity
   - Assets/Scenes/Level.unity
-  playerPath: D:/Games/unity/Sacred Tarot-20190712T094614Z-001/Sacred Tarot/examp/android/st_v0.0.5.apk
+  playerPath: D:/Games/unity/Sacred Tarot-20190712T094614Z-001/Sacred Tarot/examp/android/st_v0.0.6.apk

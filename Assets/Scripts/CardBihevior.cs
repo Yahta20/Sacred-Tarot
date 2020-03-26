@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 //[RequireComponent(typeof(Camera))]
 
@@ -12,19 +13,19 @@ public class CardBihevior : MonoBehaviour
     public Vector3 offset;
     private Vector3 velocity;
 
-    public bool  ischosen   {get; set;}
-    private bool isopen     {get; set;}
-    private bool isBlock    {get; set;}
-    private bool deathtime  {get; set;}
-    private bool flipBack   {get; set;}
+    public bool ischosen { get; set; }
+    private bool isopen { get; set; }
+    private bool isBlock { get; set; }
+    private bool deathtime { get; set; }
+    private bool flipBack { get; set; }
 
     public float smoothTime = .5f;
     private float posX;
     private float posY;
     private float axeY;
     private float f = 0.1f;
-    private float sizex = 1;//size x of card
-    private float sizey = 1;//size y of card
+    private byte emountLight = 0;
+    
 
     private float[] posit = new float[2];
 
@@ -46,16 +47,16 @@ public class CardBihevior : MonoBehaviour
 
     public void StartPosition(float[] x)
     {
-        posit[0]=x[0];
-        posit[1]=x[1];
+        posit[0] = x[0];
+        posit[1] = x[1];
         offset.x = x[0];
         offset.y = x[1];
     }
 
-    public void SetPosition(float [] x) {
-        offset.x = posit[0]+x[0];
-        offset.y = posit[1]+x[1];
-        
+    public void SetPosition(float[] x) {
+        offset.x = posit[0] + x[0];
+        offset.y = posit[1] + x[1];
+
         //Vector3 Newpost = offset;
     }
 
@@ -82,10 +83,14 @@ public class CardBihevior : MonoBehaviour
         flipBack = true;
     }
 
-    public void SetLinkToCard(GameObject lo){
+    public void SetLinkToCard(GameObject lo) {
         go = lo;
     }
-    
+
+    public byte getELight()
+    {
+        return emountLight;
+    }
     void Awake()
     {
         LvlGen = GameObject.Find("GameManager").GetComponent(typeof(LevelGenerator)) as LevelGenerator;
@@ -95,12 +100,28 @@ public class CardBihevior : MonoBehaviour
         flipBack = false;
         axeY = transform.rotation.y;
         //go = GetComponent<GameObject>();
-        
+
 
     }
 
     void FixedUpdate()
     {
+        if (emountLight == 0) {
+            string s = go.name.ToString();
+            var el = s[s.IndexOf("(")-1];
+            
+            try {
+                int i = int.Parse(el.ToString());
+                if (i == 0)
+                {
+                    emountLight = 10;
+                }
+                else { emountLight = Convert.ToByte(i); }
+
+            }
+            catch { emountLight = 11; }
+            
+        }
         transform.position = Vector3.SmoothDamp(transform.position, offset, ref velocity, smoothTime * Time.deltaTime);
         
         if (deathtime) {

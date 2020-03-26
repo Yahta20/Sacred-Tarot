@@ -15,6 +15,10 @@ public class LevelGenerator : MonoBehaviour
     [SerializeField] private GameObject   PartSys;
     [SerializeField] private Text scoreLabel;
     [SerializeField] private Text triesLabel;
+    [SerializeField] private Text SemLightLabel;
+    [SerializeField] private Text CemLightLabel;
+    [SerializeField] private Text PemLightLabel;
+    [SerializeField] private Text WemLightLabel;
     [SerializeField] public float cardSizeX;//      = 1.3f;
     [SerializeField] public float cardSizeY;//      = 2f;
     [SerializeField] public float setX;//           = cardSizeX / 4 * (1 - 0.61f);
@@ -30,25 +34,24 @@ public class LevelGenerator : MonoBehaviour
 
     private CameraBihevior cbs = null;
     
-    private const string path       = "Assets/Data/Prog.dat";
+    private const string path       = "Assets/Data/progress.dat";
     private string Param;
 
-    private int[] BufParam          = new int[5];
+    private Progress progress = new Progress();
+
+    private byte[] BufParam = new byte[5];
 
     private byte deletedCards = 0;
 
-    private long emountcups =0;
-    private long emountpent =0;
-    private long emountsword=0;
-    private long emountwand =0;
-    private long tries = 0;
+    private byte emountcups =0;
+    private byte emountpent =0;
+    private byte emountsword=0;
+    private byte emountwand =0;
+    private byte tries = 0;
     private long Score = 0;
     private long maxScore = 0;
 
-
     private bool beatMaxScore = false;
-    
-    
 
     private float wcard = 0;
     private float hcard = 0;
@@ -57,22 +60,29 @@ public class LevelGenerator : MonoBehaviour
 
     void Awake()
     {
-        BufParam =  Progress.getCardData();
+        SaveLoad.fileDelete();
+        //Conecting drawing area
+        Camera cam = GameObject.Find("Main Camera").GetComponent(typeof(Camera)) as Camera;
+        cbs = cam.GetComponent(typeof(CameraBihevior)) as CameraBihevior;
+        cbs.setOrtographicSet(false);
 
-        emountcups  = BufParam[0];
-        emountpent  = BufParam[1];
-        emountsword = BufParam[2];
-        emountwand  = BufParam[3];
-        tries = BufParam[5];
-        if (BufParam[4] == 0)
+        progress = SaveLoad.loadData();
+
+        //BufParam =  progress.getCardData();
+        
+        tries = progress.getEmountTries();
+        maxScore = progress.getMaxScore();
+
+        
+        if (maxScore < 2000)
         {
             //Welcome canvas
             //Lor of game
-            //print("Max score is 2000");
             maxScore    = 2000;
-            Progress.setEmountMaxScore(BufParam[4]); 
+            progress.setMaxScore(maxScore); 
         }
-        if (BufParam[5]==0) {
+
+        if (tries==0) {
             //Welcome canvas
             //Lor of game
             //print("hello");
@@ -82,10 +92,8 @@ public class LevelGenerator : MonoBehaviour
 
         publishCards();
 
-        setX = cardSizeX/2*(1-0.61f);
-        wcard = cardSizeX*5+6*setX;
-        hcard = cardSizeY * 5 + 6 * setX;
-        settingParam();
+        
+        setDisplayParam();
     }
 
     void LateUpdate()
@@ -93,27 +101,21 @@ public class LevelGenerator : MonoBehaviour
         //android ramsy
         if (Application.platform == RuntimePlatform.Android)
         {
-            //if (Input.GetKey(KeyCode.Home))
-            //{
-            //    Application.LoadLevel("Start");
-            //    return;
-            //}
+            
             if (Input.GetKey(KeyCode.Escape))
             {
                 Application.LoadLevel("Start");
                 return;
             }
-            /*if ( Input.GetKey(KeyCode.Menu)) {
-                tries++;
-            }*/
+            
         }
 
 
         //Updating data of game
 
         updateSave();
-        settingParam();
-        print(deletedCards);
+        setDisplayParam();
+        
         if (deletedCards == 25) {
             publishCards();
             deletedCards = 0;
@@ -182,6 +184,8 @@ public class LevelGenerator : MonoBehaviour
                 {
                     //destruction
 
+
+
                     int fCardClick = ACard.GetCliks();
                     int sCardClick = BCard.GetCliks();
                     int c = (fCardClick * 5) + (sCardClick * 5) - 10;
@@ -192,17 +196,12 @@ public class LevelGenerator : MonoBehaviour
                     }
                     Score += c;
                     // make own procedure for single card
-                    ACard.Death();
-                    BCard.Death();
+                    
+                    lightAdd(BufCard1.name, ACard.getELight());
 
-                    float[] fc = ACard.getPosition();
-                    float[] sc = BCard.getPosition();
-                    GameObject Splash1 = Instantiate(PartSys, new Vector3(fc[0], fc[1], 0), Quaternion.identity) as GameObject;
-                    GameObject Splash2 = Instantiate(PartSys, new Vector3(sc[0], sc[1], 0), Quaternion.identity) as GameObject;
-                    Destroy(Splash1, 4);
-                    Destroy(Splash2, 4);
-                    Destroy(BufCard1, 1.5f);
-                    Destroy(BufCard2, 1.5f);
+                    destroingCard(BufCard1);
+                    destroingCard(BufCard2);
+
                     tries++;
 
                 }
@@ -218,6 +217,7 @@ public class LevelGenerator : MonoBehaviour
                 BufCard2 = null;
             }
         }
+
         else {
 
                 LockAllCards(false);
@@ -225,13 +225,42 @@ public class LevelGenerator : MonoBehaviour
 
     }
 
+
+
+    //public functions
+
+    public void setChosenCard(GameObject go) {
+        if (BufCard1 == null) {
+            BufCard1 = go;
+            LockAllCards(true);
+        } else if (BufCard2 == null) {
+            BufCard2 = go;
+            LockAllCards(true);
+        }
+    }
+
+    public void updateSave() {
+
+        SemLightLabel.text  = progress.getEmountLightSwords().ToString();
+        CemLightLabel.text  = progress.getEmountLightCups()  .ToString();
+        PemLightLabel.text  = progress.getEmountLightPents() .ToString();
+        WemLightLabel.text  = progress.getEmountLightWands() .ToString();
+        scoreLabel.text     = Score.ToString();
+        triesLabel.text     = tries.ToString();
+        progress.setEmountTries(tries);
+        if ((Score > maxScore) & !beatMaxScore) { progress.setMaxScore(Score); tries += 5; beatMaxScore = true; }
+        SaveLoad.saveData(progress);
+    }
+
+
+    //private functions
     private void publishCards()
     {
-        int[,] MapOfCards = Tassovaty(BufParam);//Map of cards and emount of it that will be playing
+        byte[,] MapOfCards = Tassovaty(progress.getCardData());//Map of cards and emount of it that will be playing
         //Set patron Arcan as 25th card
         SetOfCard[24] = HighArcCard[UnityEngine.Random.Range(0, HighArcCard.Length)];
-        //CardPack[0,0] = HighArcCard[UnityEngine.Random.Range(0, HighArcCard.Length)];
-        //Создание масива карт
+        
+        //Kreation map array
         for (int i = 0; i < 12; i++)
         {
             switch (MapOfCards[i, 1])
@@ -262,10 +291,7 @@ public class LevelGenerator : MonoBehaviour
             SetOfCard[i] = SetOfCard[r];
             SetOfCard[r] = tmp;
         }
-        //Conecting drawing area
-        Camera cam = GameObject.Find("Main Camera").GetComponent(typeof(Camera)) as Camera;
-        cbs = cam.GetComponent(typeof(CameraBihevior)) as CameraBihevior;
-        cbs.setOrtographicSet(false);
+        
 
         float xpos = cardSizeX * -2;//3f;
         float ypos = cardSizeY * -2;//-4.4f;
@@ -283,39 +309,18 @@ public class LevelGenerator : MonoBehaviour
                 cbs.rost(SetOfCard[num].transform);
             }
         }
+        setX = cardSizeX / 2 * (1 - 0.61f);
+        wcard = cardSizeX * 5 + 6 * setX;
+        hcard = cardSizeY * 5 + 6 * setX;
     }
 
-
-    //public functions
-    public void setChosenCard(GameObject go) {
-        if (BufCard1 == null) {
-            BufCard1 = go;
-            LockAllCards(true);
-        } else if (BufCard2 == null) {
-            BufCard2 = go;
-            LockAllCards(true);
-        }
-    }
-
-    public void updateSave() {
-
-        scoreLabel.text = Score.ToString();
-        triesLabel.text = tries.ToString();
-        Progress.setEmountTries((byte)(tries >> 8));
-        if (Score > BufParam[4] & !beatMaxScore) { Progress.setEmountMaxScore(Score); tries += 5; beatMaxScore = true; }
-
-    }
-
-
-    //private functions
-
-    private int[,] Tassovaty(int[] inArray)//создание масива карт что будут на поле
+    private byte[,] Tassovaty(byte[] inArray)//создание масива карт что будут на поле
     {
-        int[,] cardEmount = new int[12, 2];
+        byte[,] cardEmount = new byte[12, 2];
 
         for (int i = 0; i < 12; i++) {
-            int Masty = UnityEngine.Random.Range(0, 4);//chose of cardmark 
-            int nomerCarty = UnityEngine.Random.Range(0, inArray[Masty]);//Random making of new card
+            byte Masty = Convert.ToByte(UnityEngine.Random.Range(0, 4));                  //chose of cardmark 
+            byte nomerCarty = Convert.ToByte(UnityEngine.Random.Range(0, inArray[Masty]));//Random making of new card
             cardEmount[i, 0] = nomerCarty;
             cardEmount[i, 1] = Masty;
         }
@@ -323,7 +328,25 @@ public class LevelGenerator : MonoBehaviour
         return cardEmount;
     }
 
-    private void settingParam() {
+    private void lightAdd(string name, byte i) {
+        string typeOfLight = name.Substring(0, 4);
+        switch (typeOfLight) {
+            case "pent":
+                progress.setEmountLightPents(Convert.ToByte(i));
+                break;
+            case "wand":
+                progress.setEmountLightWands(Convert.ToByte(i));                
+                break;
+            case "swor":
+                progress.setEmountLightSwords(Convert.ToByte(i));
+                break;
+            case "cups":
+                progress.setEmountLightCups(Convert.ToByte(i));
+                break;
+        }
+    }
+
+    private void setDisplayParam() {
         var koef = cbs.getaspect() * (reservSpaceY);
         setY = setX / koef;
         cbs.setCameraAngle(Mathf.Rad2Deg * Mathf.Atan2(Mathf.Abs(cbs.offset.z) , wcard));
@@ -383,16 +406,12 @@ public class LevelGenerator : MonoBehaviour
 
                 break;
             case "sun(Clone)":
-
-                bihevCard.Death();
+                
                 Score += 190;
-                
 
-                float[] fc = bihevCard.getPosition();
-                
-                GameObject Splash1 = Instantiate(PartSys, new Vector3(fc[0], fc[1], 0), Quaternion.identity) as GameObject;
-                Destroy(Splash1, 4);
-                Destroy(go, 1.0f);
+                destroingCard(go);
+
+
                 BufCard1 = null;
                 LockAllCards(false);
                 tries++;
@@ -438,6 +457,18 @@ public class LevelGenerator : MonoBehaviour
         }
     }
 
+    private void destroingCard(GameObject go) {
+
+        CardBihevior ACard = go.GetComponent<CardBihevior>();
+
+        ACard.Death();
+        
+        float[] fc = ACard.getPosition();
+        GameObject Splash1 = Instantiate(PartSys, new Vector3(fc[0], fc[1], 0), Quaternion.identity) as GameObject;
+        Destroy(Splash1, 3.5f);
+        Destroy(go, 1.6f);
+
+    }
 
     //Sun
     /*
