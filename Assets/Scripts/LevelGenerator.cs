@@ -12,7 +12,7 @@ public class LevelGenerator : MonoBehaviour
     [SerializeField] private GameObject[] PentArcCard;
     [SerializeField] private GameObject[] SwordArcCard;
     [SerializeField] private GameObject[] WandArcCard;
-    [SerializeField] private GameObject   PartSys;
+    [SerializeField] private GameObject PartSys;
     [SerializeField] private Text scoreLabel;
     [SerializeField] private Text triesLabel;
     [SerializeField] private Text SemLightLabel;
@@ -23,19 +23,18 @@ public class LevelGenerator : MonoBehaviour
     [SerializeField] public float cardSizeY;//      = 2f;
     [SerializeField] public float setX;//           = cardSizeX / 4 * (1 - 0.61f);
     [SerializeField] public float setY;//           = (cam.aspect/(GetMaxDistance(1)/ GetMaxDistance(2))) * setX;
-    [SerializeField] public float reservSpaceX;//   =0.75 
-    [SerializeField] public float reservSpaceY;//   =0.9
+    [SerializeField] public float reservSpaceX;//   = 0.75 
+    [SerializeField] public float reservSpaceY;//   = 0.9
 
     private GameObject[] SetOfCard = new GameObject[25];
-    private GameObject[,] CardPack = new GameObject [5,5];
-    
-    private GameObject    BufCard1  = null;
-    private GameObject    BufCard2  = null;
+    private GameObject[,] CardPack = new GameObject[5, 5];
+
+    private GameObject BufCard1 = null;
+    private GameObject BufCard2 = null;
 
     private CameraBihevior cbs = null;
-    
-    private const string path       = "Assets/Data/progress.dat";
-    private string Param;
+
+    private Canvas mainCanvas = null;
 
     private Progress progress = new Progress();
 
@@ -43,11 +42,11 @@ public class LevelGenerator : MonoBehaviour
 
     private byte deletedCards = 0;
 
-    private byte emountcups =0;
-    private byte emountpent =0;
-    private byte emountsword=0;
-    private byte emountwand =0;
-    private byte tries = 0;
+    private byte emountcups = 0;
+    private byte emountpent = 0;
+    private byte emountsword = 0;
+    private byte emountwand = 0;
+    private sbyte tries = 0;
     private long Score = 0;
     private long maxScore = 0;
 
@@ -60,29 +59,31 @@ public class LevelGenerator : MonoBehaviour
 
     void Awake()
     {
-        SaveLoad.fileDelete();
+        //SaveLoad.fileDelete();
         //Conecting drawing area
-        Camera cam = GameObject.Find("Main Camera").GetComponent(typeof(Camera)) as Camera;
+        mainCanvas = GameObject.Find("Main_Canvas").GetComponent(typeof(Canvas)) as Canvas;
+        Camera cam = GameObject.Find("Main_Camera").GetComponent(typeof(Camera)) as Camera;
         cbs = cam.GetComponent(typeof(CameraBihevior)) as CameraBihevior;
         cbs.setOrtographicSet(false);
-
+        SaveLoad.fileDelete();
         progress = SaveLoad.loadData();
 
         //BufParam =  progress.getCardData();
-        
+
         tries = progress.getEmountTries();
         maxScore = progress.getMaxScore();
 
-        
+
         if (maxScore < 2000)
         {
             //Welcome canvas
             //Lor of game
-            maxScore    = 2000;
-            progress.setMaxScore(maxScore); 
+            maxScore = 2000;
+            progress.setMaxScore(maxScore);
         }
 
-        if (tries==0) {
+        if (tries == 0)
+        {
             //Welcome canvas
             //Lor of game
             //print("hello");
@@ -92,31 +93,43 @@ public class LevelGenerator : MonoBehaviour
 
         publishCards();
 
-        
+
         setDisplayParam();
     }
+    private void FixedUpdate()
+    {
+        if (tries == 0)
+        {
+            //Canvas of deth
+            LockAllCards(true);
 
+        }
+    }
     void LateUpdate()
     {
         //android ramsy
         if (Application.platform == RuntimePlatform.Android)
         {
-            
+
             if (Input.GetKey(KeyCode.Escape))
             {
+                //pause
                 Application.LoadLevel("Start");
                 return;
             }
-            
+
         }
+
+        
 
 
         //Updating data of game
 
         updateSave();
         setDisplayParam();
-        
-        if (deletedCards == 25) {
+
+        if (deletedCards == 25)
+        {
             publishCards();
             deletedCards = 0;
         }
@@ -133,23 +146,26 @@ public class LevelGenerator : MonoBehaviour
                 a[1] = (cardPos[1] / cardSizeY) * setY;
                 ChildBihevior.SetPosition(a);
             }
-            else {
+            else
+            {
                 deletedCards++;
             }
-            
+
         }
-        
-        if (BufCard1 != null) {
+
+        if (BufCard1 != null)
+        {
             CardBihevior FirstChosenCard = BufCard1.GetComponent<CardBihevior>();
-            CheckOfArkan(BufCard1,0);
+            CheckOfArkan(BufCard1);
             //print("allo0");
             if (FirstChosenCard.Openstate())
             {
-                
+
                 LockAllCards(false);
-              //  print("allo");
+                //  print("allo");
             }
-            else {
+            else
+            {
                 //print("allo1");
                 LockAllCards(true);
             }
@@ -157,16 +173,16 @@ public class LevelGenerator : MonoBehaviour
 
         if (BufCard2 != null)
         {
-            CardBihevior SecondChosenCard = BufCard1.GetComponent<CardBihevior>();
-
+            CardBihevior SecondChosenCard = BufCard2.GetComponent<CardBihevior>();
+            CheckOfArkan(BufCard2);
             if (SecondChosenCard.Openstate())
             {
                 LockAllCards(false);
-                
+
             }
             else
             {
-                
+
                 LockAllCards(true);
             }
         }
@@ -185,19 +201,11 @@ public class LevelGenerator : MonoBehaviour
                     //destruction
 
 
+                    score4cards(BufCard1, BufCard2);
 
-                    int fCardClick = ACard.GetCliks();
-                    int sCardClick = BCard.GetCliks();
-                    int c = (fCardClick * 5) + (sCardClick * 5) - 10;
-                    c = 30 - c;
-                    if (c < 0)
-                    {
-                        c = 0;
-                    }
-                    Score += c;
                     // make own procedure for single card
-                    
-                    lightAdd(BufCard1.name, ACard.getELight());
+                    //get light only once
+
 
                     destroingCard(BufCard1);
                     destroingCard(BufCard2);
@@ -218,10 +226,36 @@ public class LevelGenerator : MonoBehaviour
             }
         }
 
-        else {
+        else
+        {
 
-                LockAllCards(false);
+            LockAllCards(false);
         }
+
+    }
+
+    private void score4cards(GameObject bufCard1, GameObject bufCard2)
+    {
+        CardBihevior ACard = BufCard1.GetComponent<CardBihevior>();
+        CardBihevior BCard = BufCard2.GetComponent<CardBihevior>();
+        int fCardClick = ACard.GetCliks();
+        int sCardClick = BCard.GetCliks();
+        int c = (fCardClick * 5) + (sCardClick * 5) - 10;
+        c = 30 - c;
+        if (c <= 0)
+        {
+            c = 0;
+        }
+
+
+        lightAdd(BufCard1.name, ACard.getELight());
+        Score += c;
+
+    }
+    private void scoreArcan4cards(int i)
+    {
+
+        Score += i;
 
     }
 
@@ -229,24 +263,29 @@ public class LevelGenerator : MonoBehaviour
 
     //public functions
 
-    public void setChosenCard(GameObject go) {
-        if (BufCard1 == null) {
+    public void setChosenCard(GameObject go)
+    {
+        if (BufCard1 == null)
+        {
             BufCard1 = go;
             LockAllCards(true);
-        } else if (BufCard2 == null) {
+        }
+        else if (BufCard2 == null)
+        {
             BufCard2 = go;
             LockAllCards(true);
         }
     }
 
-    public void updateSave() {
+    public void updateSave()
+    {
 
-        SemLightLabel.text  = progress.getEmountLightSwords().ToString();
-        CemLightLabel.text  = progress.getEmountLightCups()  .ToString();
-        PemLightLabel.text  = progress.getEmountLightPents() .ToString();
-        WemLightLabel.text  = progress.getEmountLightWands() .ToString();
-        scoreLabel.text     = Score.ToString();
-        triesLabel.text     = tries.ToString();
+        SemLightLabel.text = progress.getEmountLightSwords().ToString();
+        CemLightLabel.text = progress.getEmountLightCups().ToString();
+        PemLightLabel.text = progress.getEmountLightPents().ToString();
+        WemLightLabel.text = progress.getEmountLightWands().ToString();
+        scoreLabel.text = Score.ToString();
+        triesLabel.text = tries.ToString();
         progress.setEmountTries(tries);
         if ((Score > maxScore) & !beatMaxScore) { progress.setMaxScore(Score); tries += 5; beatMaxScore = true; }
         SaveLoad.saveData(progress);
@@ -254,12 +293,13 @@ public class LevelGenerator : MonoBehaviour
 
 
     //private functions
+
     private void publishCards()
     {
-        byte[,] MapOfCards = Tassovaty(progress.getCardData());//Map of cards and emount of it that will be playing
+        byte[,] MapOfCards = makeMapOfCards(progress.getCardData());//Map of cards and emount of it that will be playing
         //Set patron Arcan as 25th card
         SetOfCard[24] = HighArcCard[UnityEngine.Random.Range(0, HighArcCard.Length)];
-        
+
         //Kreation map array
         for (int i = 0; i < 12; i++)
         {
@@ -291,7 +331,8 @@ public class LevelGenerator : MonoBehaviour
             SetOfCard[i] = SetOfCard[r];
             SetOfCard[r] = tmp;
         }
-        
+
+
 
         float xpos = cardSizeX * -2;//3f;
         float ypos = cardSizeY * -2;//-4.4f;
@@ -314,13 +355,20 @@ public class LevelGenerator : MonoBehaviour
         hcard = cardSizeY * 5 + 6 * setX;
     }
 
-    private byte[,] Tassovaty(byte[] inArray)//создание масива карт что будут на поле
+    private byte[,] makeMapOfCards(byte[] inArray)//создание масива карт что будут на поле
     {
         byte[,] cardEmount = new byte[12, 2];
 
-        for (int i = 0; i < 12; i++) {
+        /*for (int i = 0; i < 12; i++) {
             byte Masty = Convert.ToByte(UnityEngine.Random.Range(0, 4));                  //chose of cardmark 
             byte nomerCarty = Convert.ToByte(UnityEngine.Random.Range(0, inArray[Masty]));//Random making of new card
+            cardEmount[i, 0] = nomerCarty;
+            cardEmount[i, 1] = Masty;
+        }*/
+        for (int i = 0; i < 12; i++)
+        {
+            byte Masty = Convert.ToByte(i / 3);
+            byte nomerCarty = Convert.ToByte(UnityEngine.Random.Range(0, inArray[Masty] + 1));
             cardEmount[i, 0] = nomerCarty;
             cardEmount[i, 1] = Masty;
         }
@@ -328,14 +376,16 @@ public class LevelGenerator : MonoBehaviour
         return cardEmount;
     }
 
-    private void lightAdd(string name, byte i) {
+    private void lightAdd(string name, byte i)
+    {
         string typeOfLight = name.Substring(0, 4);
-        switch (typeOfLight) {
+        switch (typeOfLight)
+        {
             case "pent":
                 progress.setEmountLightPents(Convert.ToByte(i));
                 break;
             case "wand":
-                progress.setEmountLightWands(Convert.ToByte(i));                
+                progress.setEmountLightWands(Convert.ToByte(i));
                 break;
             case "swor":
                 progress.setEmountLightSwords(Convert.ToByte(i));
@@ -346,388 +396,206 @@ public class LevelGenerator : MonoBehaviour
         }
     }
 
-    private void setDisplayParam() {
+    private void setDisplayParam()
+    {
         var koef = cbs.getaspect() * (reservSpaceY);
         setY = setX / koef;
-        cbs.setCameraAngle(Mathf.Rad2Deg * Mathf.Atan2(Mathf.Abs(cbs.offset.z) , wcard));
+        cbs.setCameraAngle(Mathf.Rad2Deg * Mathf.Atan2(Mathf.Abs(cbs.offset.z), wcard));
     }
 
-    private float roundFloat(float n) {
+    private float roundFloat(float n)
+    {
         return ((float)(int)(n * 100)) / 100;
     }
-    
-    private void LockAllCards(bool b) {
+
+    private void LockAllCards(bool b)
+    {
         ///Locking or Unlocking all cards by putting bool charakter
-        
+
         for (int j = 0; j < 25; j++)
         {
             if (SetOfCard[j] != null)
             {
                 CardBihevior Card = SetOfCard[j].GetComponent<CardBihevior>();
                 Card.SetBlock(b);
-            } 
+            }
 
         }
     }
-    
-    private void CheckOfArkan(GameObject go, byte numberInBuffer ) {
-        int em = 0;
-        for (int m = 0; m < 25; m++) // узнаем сколько карт открыто
-        {
-            if (go != null)
-            {
-                em++;
-            }
-        }
+
+    private void CheckOfArkan(GameObject go)
+    {
+
+
 
         CardBihevior bihevCard = go.GetComponent<CardBihevior>();
         float[] position = bihevCard.getPosition();
         int chanseOption = UnityEngine.Random.Range(0, 100);
         chanseOption = (chanseOption % 2 == 0) ? chanseOption = 0 : chanseOption = 1;
+        byte number = 0;
+        int addScore = 0;
+        byte arcan = 0;
         switch (go.name)
         {
             case "moon(Clone)":
                 //количество открытых карт
-                
-                if (em == 0)
-                {
-                    Score += 180;
-                }
-
-                if (em >= 2 & em <= 23)
-                {
-                    Score += 100;
-                }
-
-                if (em == 24)
-                {
-                    Score += 180;
-                }
-
                 break;
             case "sun(Clone)":
-                
-                Score += 190;
+                GameObject[] cardSunOpen = new GameObject[5];
+                foreach (GameObject cO in SetOfCard)
+                {
+                    if (cO != null)//find cards in the line
+                    {
+                        if (chanseOption == 0)
+                        {
+                            if (go.transform.position.x == cO.transform.position.x & cO.GetInstanceID() != go.GetInstanceID() & cO != null)
+                            {
 
+                                cardSunOpen[number] = cO;
+                                number++;
+                                
+                                //& cO.GetInstanceID() != go.GetInstanceID() & number >= cardSunOpen.Length
+                            }
+                        }
+                        else
+                        {
+                            if (go.transform.position.y == cO.transform.position.y & cO.GetInstanceID() != go.GetInstanceID() & cO != null)
+                            {
+                                //& cO.GetInstanceID() != go.GetInstanceID() & number >= cardSunOpen.Length
+                                cardSunOpen[number] = cO;
+                                number++;
+                                
+                            }
+                        }
+                    }
+                }
+                if (BufCard1 != null)
+                {
+                    if (BufCard1.GetInstanceID() != go.GetInstanceID())
+                    {
+                        int co = 0;
+                        foreach (GameObject soc in cardSunOpen) {
+                            if (soc == null)
+                            {
+                                break;
+                            }
+                            else {
+                                co++;
+                            }
+                            if (soc.GetInstanceID() == BufCard1.GetInstanceID())
+                            {
+                                co = 0;
+                                break;
+                            }
+                            
+                        }
+                        if (co>0) {
+                            cardSunOpen[co] = BufCard1;
+                        }
+                        foreach (GameObject cso in cardSunOpen)
+                        {
+                            if (cso != null)
+                            {
+                                
+                               //if (cso.GetInstanceID() != BufCard1.GetInstanceID() & cso.name == BufCard1.name)
+                               //{
+                               //    destroingCard(BufCard1);
+                               //    BufCard1 = null;
+                               //    destroingCard(cso);
+                               //    scoreArcan4cards(20);
+                               //    break;
+                               //}
+                            }
+                        }
+                    }
+                }
+                //samecards in line destroy
+                for (int i = 0; i < cardSunOpen.Length; i++)
+                {
+                    for (int j = 0; j < cardSunOpen.Length; j++)
+                    {
+                        if (cardSunOpen[i] != null & cardSunOpen[j] != null)
+                        {
+                            if (cardSunOpen[i].GetInstanceID() != cardSunOpen[j].GetInstanceID() & cardSunOpen[i].name == cardSunOpen[j].name)
+                            {
+                                destroingCard(cardSunOpen[i]);
+                                destroingCard(cardSunOpen[j]);
+                                cardSunOpen[j] = null;
+                                cardSunOpen[i] = null;
+
+                                scoreArcan4cards(20);
+                            }
+                        }
+                    }
+                }
+                //othercard for para
+                foreach (GameObject cso in cardSunOpen)
+                {
+                    foreach (GameObject co in SetOfCard)
+                    {
+                        if (co != null & cso != null)
+                        {
+                            if (co.name == cso.name & co.GetInstanceID() != cso.GetInstanceID())
+                            {
+                                destroingCard(cso);
+                                destroingCard(co);
+                                scoreArcan4cards(20);
+                                break;
+                            }
+                        }
+                    }
+                }
                 destroingCard(go);
 
-
                 BufCard1 = null;
+                BufCard2 = null;
                 LockAllCards(false);
-                tries++;
                 break;
             case "star(Clone)":
                 //количество открытых карт
 
-                if (em == 0)
-                {
-                    Score += 170;
-                }
-
-                if (em >= 2 & em <= 23)
-                {
-                    Score += 100;
-                }
-
-                if (em == 24)
-                {
-                    Score += 170;
-                }
 
                 break;
             case "tower(Clone)":
                 //количество открытых карт
 
-                if (em == 0)
-                {
-                    Score += 160;
-                }
 
-                if (em >= 2 & em <= 23)
-                {
-                    Score += 100;
-                }
-
-                if (em == 24)
-                {
-                    Score += 160;
-                }
 
                 break;
         }
+
+        switch (deletedCards)
+        {
+            case 0:
+                addScore = arcan * 10;
+                break;
+            case 24:
+                addScore = arcan * 10;
+                break;
+            default:
+                if (arcan > 0)
+                {
+                    addScore = deletedCards * 10;
+                }
+                break;
+        }
+
+        Score += addScore;
+
     }
 
-    private void destroingCard(GameObject go) {
+    private void destroingCard(GameObject go)
+    {
 
         CardBihevior ACard = go.GetComponent<CardBihevior>();
 
         ACard.Death();
-        
+
         float[] fc = ACard.getPosition();
         GameObject Splash1 = Instantiate(PartSys, new Vector3(fc[0], fc[1], 0), Quaternion.identity) as GameObject;
         Destroy(Splash1, 3.5f);
         Destroy(go, 1.6f);
 
     }
-
-    //Sun
-    /*
-    GameObject[] cardSunOpen = new GameObject[4];
-    GameObject[] card2Open = new GameObject[4];
-    byte num = 0;
-    //print ( num);
-    //make list of cards to open
-    foreach (GameObject loopObj in SetOfCard)//(int i = 0; i > 25; i++)
-    {
-        if (loopObj != null) {
-            if (numberInBuffer==0) {
-                if (go.name != loopObj.name)
-                {
-                    if (chanseOption == 0)
-                    {
-                        if (loopObj.transform.position.y == position[1] )
-                        {
-                            print(loopObj.transform.position.x);
-                            cardSunOpen[num] = loopObj;
-                            num++;
-                        }
-                    }
-                    else {
-                        if (loopObj.transform.position.x == position[0])
-                        {
-                            print(loopObj.transform.position.x);
-                            cardSunOpen[num] = loopObj;
-                            num++;
-                        }
-                    }
-                }
-            }
-
-        }
-    }
-    num = 0;
-    foreach (GameObject lObj in cardSunOpen) {
-        foreach (GameObject loopObj in SetOfCard)
-        {
-            if (num == card2Open.Length-1) {
-                print(num);
-                break;
-            }
-            if (lObj != loopObj) {
-                if (lObj.name == loopObj.name) {
-                    card2Open[num] = loopObj;
-                    print(card2Open.Length);
-                    num++;    
-                }
-            }
-
-        }
-    }
-
-    foreach (GameObject loopObj in card2Open) {
-        CardBihevior Card = loopObj.GetComponent<CardBihevior>();
-        Card.Death();
-    }
-
-    if (em == 0)
-    {
-        Score += 190;
-    }
-
-    if (em >= 2 & em < 24)
-    {
-        Score += 100;
-    }
-
-    if (em == 24)
-    {
-        Score += 190;
-    }
-
-    */
-
-    //Stuff
-    /*
-     * 
-     * 
-     * 
-     * 
-       
-    StreamReader sr = new StreamReader(path);
-        //Чтение достижений народного хозяйства
-        if (sr != null) {
-            int i = 0;
-            while (!sr.EndOfStream) {
-                BufParam[i] = Convert.ToInt32(sr.ReadLine());
-                i++;
-            }
-             emountcups =BufParam[0];
-             emountpent =BufParam[1];
-             emountsword=BufParam[2];
-             emountwand =BufParam[3];
-             maxScore   =BufParam[4];
-        }
-    
-    
-    var cardasp = x / y;
-
-
-       if ((cardasp/cbs.getaspect())>1.00f || (cardasp / cbs.getaspect()) < 1.00f) {
-
-           var st = (cardasp / cbs.getaspect()).ToString();
-           st = (st.Length>6) ? st.Substring(0, 6) : st;
-           setY = (float.Parse(st)<1) ? Mathf.Lerp(setY, setY - 0.0025f, Time.deltaTime) : Mathf.Lerp(setY, setY + 0.0025f, Time.deltaTime);
-           setX = (float.Parse(st)<1) ? Mathf.Lerp(setX, setX + 0.0025f, Time.deltaTime) : Mathf.Lerp(setX, setX - 0.0025f, Time.deltaTime);
-
-       }
-
-
-
-       setX =(setX > cardSizeX / 4 * (1 - 0.61f)) ? cardSizeX / 4 * (1 - 0.61f): cardSizeX / 4 * (1 - 0.61f);
-       setY=(setY > cardSizeY / 4 * (1 - 0.61f)) ?cardSizeX / 4 * (1 - 0.61f): cardSizeX / 4 * (1 - 0.61f);
-       */
-
-
-    /*
-    x = (x.Length > 3)   ? x.Substring(0, 3) : x;
-    y = (y.Length > 3)   ? y.Substring(0, 3) : y;
-
-    if ( float.Parse(x) != 6.0f) {
-        setX = (cbs.GetMaxDistance(1) < 6) ? Mathf.Lerp(setX, setX + 0.02f, Time.deltaTime) : Mathf.Lerp(setX, setX - 0.02f, Time.deltaTime);
-
-        if (x.Length > 3 ) {
-            x = x.Substring(0, 3);
-            setX = (float.Parse(x) == 6.0f) ? Mathf.Lerp(setX, float.Parse(x), Time.deltaTime) : Mathf.Lerp(setX, float.Parse(x), Time.deltaTime);
-
-        }
-    }
-    if (float.Parse(y) != 9.0f)
-    {
-        setY = (cbs.GetMaxDistance(2) < 9) ? Mathf.Lerp(setY, setY + 0.02f, Time.deltaTime) : Mathf.Lerp(setY, setY - 0.02f, Time.deltaTime);
-
-        if (y.Length > 3)
-        {
-            y = y.Substring(0, 3);
-            setY = (float.Parse(y) == 9.0f) ? Mathf.Lerp(setY, float.Parse(y), Time.deltaTime) : Mathf.Lerp(setX, float.Parse(y), Time.deltaTime);
-        }
-    }
-    //setY = (float.Parse(y) == 9.0f) ? setY : 0;
-
-
-
-    //setX = (cbs.GetMaxDistance(1).ToString) ? Mathf.Lerp(setX, setX + 0.02f, Time.deltaTime) : setX;
-
-    var condy = cbs.GetMaxDistance(2) / 4 / 6;
-    */
-    /*
-      for (int i = 0; i < 25; i++)
-        {
-            if (SetOfCard[i] != null)
-            {
-                CardBH = SetOfCard[i].GetComponent<CardBihevior>();
-                stat = CardBH.getState();
-
-
-                if (stat)
-                {//Опредиление открытой карты
-                    number = i;
-                }
-
-                if (number != -1)
-                {// Block all card when one is chozen
-                    if (number != i)
-                    {
-                        CardBH.SetBlock(true);
-                    }
-                }
-
-                
-
-                if (number == i & CardBH.Openstate())
-                {
-                    
-                    if (SetOfCard[i].name == "sun(Clone)"   | SetOfCard[i].name == "star(Clone)" |
-                        SetOfCard[i].name == "tower(Clone)" | SetOfCard[i].name == "moon(Clone)")
-                    {
-                        
-                        CheckOfArkan(SetOfCard[i]);
-                    }
-                    else
-                    {
-                        number = -1;
-                        EmountOfOpencard++;
-                        if (EmountOfOpencard == 1)
-                        {
-                            BufCard1 = SetOfCard[i];
-                        }
-                        if (EmountOfOpencard == 2)
-                        {
-                            BufCard2 = SetOfCard[i];
-                        }
-                        LockAllCards(false);
-                        CardBH.SetBlock(true);
-                    }
-                }
-
-                if (EmountOfOpencard == 2)
-                {
-                    //Все карты блокируются
-                    LockAllCards(true);
-
-                    if (BufCard1.name == BufCard2.name)//Если две карты одинаковые.
-                    {
-                        //destruction
-                        CardBihevior ACard = BufCard1.GetComponent<CardBihevior>();
-                        CardBihevior BCard = BufCard2.GetComponent<CardBihevior>();
-                        
-                        int a = ACard.GetCliks();
-                        int b = BCard.GetCliks();
-                        int c = (a*5)+(b*5)-10;
-                        c = 30 - c;
-                        if (c < 0) {
-                            c = 0;
-                        }
-                        Score += c;
-                        
-
-                        ACard.Death();
-                        BCard.Death();
-
-                        float[] fc = ACard.getPosition();
-                        float[] sc = BCard.getPosition();
-                        GameObject Splash1 = Instantiate(PartSys, new Vector3(fc[0], fc[1], 0), Quaternion.identity) as GameObject;
-                        GameObject Splash2 = Instantiate(PartSys, new Vector3(sc[0], sc[1], 0), Quaternion.identity) as GameObject;
-                        Destroy(Splash1, 4);
-                        Destroy(Splash2, 4);
-                        Destroy(BufCard1, 1.5f);
-                        Destroy(BufCard2, 1.5f);
-                        tries++;
-
-                    }
-
-                    if (BufCard1.name != BufCard2.name) {
-                        CardBihevior ACard = BufCard1.GetComponent<CardBihevior>();
-                        CardBihevior BCard = BufCard2.GetComponent<CardBihevior>();
-                        ACard.notAcouple();
-                        BCard.notAcouple();
-                        tries--;
-                    }
-                    //Unlock cards
-                    LockAllCards(false);
-
-                    BufCard1 = null;
-                    BufCard2 = null;
-                    EmountOfOpencard = 0;
-
-                }
-                
-               
-            }
-        }
-     
-     
-     */
 }
-
-
-
+   

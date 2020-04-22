@@ -18,7 +18,7 @@ public class Progress
     private byte opensOfSword     ;
     private byte opensOfWand      ;
 
-    private byte emountOfTries    ;
+    private sbyte emountOfTries    ;
 
     private byte emountLightCups  ;
     private byte emountLightPents ;
@@ -30,11 +30,11 @@ public class Progress
     public byte[]   getCardData()   { return new byte[4] { emountOfCups, emountOfPent, emountOfSword, emountOfWand};}
     public byte[]   getLightData()  { return new byte[4] { emountLightCups, emountLightPents, emountLightSwords, emountLightWands }; }
                                                                    
-    public byte getEmountCups  ()   {return emountOfCups  ; }        
-    public byte getEmountPents ()   {return emountOfPent  ; }
-    public byte getEmountSwords()   {return emountOfSword ; }
-    public byte getEmountWands ()   {return emountOfWand  ; }
-    public byte getEmountTries ()   {return emountOfTries ; }
+    public byte getEmountCups  ()       {return emountOfCups  ; }        
+    public byte getEmountPents ()       {return emountOfPent  ; }
+    public byte getEmountSwords()       {return emountOfSword ; }
+    public byte getEmountWands ()       {return emountOfWand  ; }
+    public sbyte getEmountTries ()      {return emountOfTries ; }
 
     public byte getEmountLightCups  () {return emountLightCups  ; }  
     public byte getEmountLightPents () {return emountLightPents ; }
@@ -44,7 +44,7 @@ public class Progress
     public long getMaxScore()       { return maxScore; }           
     public void setMaxScore(long i) { maxScore = i; }
 
-    public void setEmountTries (byte i)      {emountOfTries  = i; }
+    public void setEmountTries (sbyte i)      {emountOfTries  = i; }
 
     public void setEmountLightCups  (byte l) { emountLightCups += l  ; setEmountCups   (l); }
     public void setEmountLightPents (byte l) { emountLightPents  += l ; setEmountPents (l); }
