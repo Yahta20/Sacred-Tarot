@@ -3,21 +3,21 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 
-//[RequireComponent(typeof(Camera))]
+public enum CardState{
+	unblock = -1,
+	block = 0,
+	open = 1,
+	close = 2,
+	death = 3
+}
 
 public class CardBihevior : MonoBehaviour
 {
     private LevelGenerator LvlGen;
     private GameObject go;
-
+	public CardState currentState{get;private set;}
     public Vector3 offset;
     private Vector3 velocity;
-
-    public bool ischosen { get; set; }
-    private bool isopen { get; set; }
-    private bool isBlock { get; set; }
-    private bool deathtime { get; set; }
-    private bool flipBack { get; set; }
 
     public float smoothTime = .5f;
     private float posX;
@@ -31,19 +31,6 @@ public class CardBihevior : MonoBehaviour
 
     private int dirOfRotation = 0;
     private ushort TotalClicks = 0;
-
-    public void Death() {
-        deathtime = true;
-    }
-
-    public void SetBlock(bool a)
-    {
-        isBlock = a;
-    }
-
-    public bool GetBlock() {
-        return isBlock;
-    }
 
     public void StartPosition(float[] x)
     {
@@ -67,20 +54,8 @@ public class CardBihevior : MonoBehaviour
 
     }
 
-    public void setOpen(bool b) {
-        b = isopen;
-    }
-
-    public bool Openstate() {
-        return isopen;
-    }
-
     public int GetCliks() {
         return TotalClicks;
-    }
-
-    public void notAcouple() {
-        flipBack = true;
     }
 
     public void SetLinkToCard(GameObject lo) {
@@ -91,14 +66,13 @@ public class CardBihevior : MonoBehaviour
     {
         return emountLight;
     }
-    void Awake()
+    
+	void Awake()
     {
         LvlGen = GameObject.Find("GameManager").GetComponent(typeof(LevelGenerator)) as LevelGenerator;
-        isopen = false;
-        ischosen = false;
-        deathtime = false;
-        flipBack = false;
+        
         axeY = transform.rotation.y;
+		currentState = CardState.unblock;
         //go = GetComponent<GameObject>();
 
 
@@ -106,6 +80,7 @@ public class CardBihevior : MonoBehaviour
 
     void FixedUpdate()
     {
+		
         if (emountLight == 0) {
             string s = go.name.ToString();
             var el = s[s.IndexOf("(")-1];
@@ -124,65 +99,63 @@ public class CardBihevior : MonoBehaviour
         }
         transform.position = Vector3.SmoothDamp(transform.position, offset, ref velocity, smoothTime * Time.deltaTime);
         
-        if (deathtime) {
-            f += Time.deltaTime;
-            axeY += 10f+(f * f+10 + Time.deltaTime);
-        }
-        if (ischosen) {
-            axeY = Mathf.LerpAngle(axeY, 180, 0.15f);
-            if (axeY>170.95f) {
-                
-                isopen = true;
-                ischosen = false;
-                isBlock = true;
-                TotalClicks++;
-                axeY = 180;
-            }
-        }
-        if (flipBack) {
-
-
-            axeY = Mathf.LerpAngle(axeY, 0, 0.38f);
+		switch(currentState){
+			case (CardState.open):
+				axeY = Mathf.LerpAngle(axeY, 180, smoothTime);
+				if (axeY>170.95f) {   
+					currentState = CardState.block;
+					TotalClicks++;
+					axeY = 180;
+				}
+			break;
+			case (CardState.close):
+			 axeY = Mathf.LerpAngle(axeY, 0, smoothTime);
             //print(axeY+" flipBack "+go.name);
-            if (axeY > 340.0f)
+            if (axeY > 350.0f)
             {
-               
+				currentState = CardState.unblock;
                 axeY = 0;
-                isopen = false;
-                ischosen = false;
-                flipBack = false;
-                isBlock = false;
             }
-
-   
-        }
-        transform.eulerAngles = new Vector3(0, axeY, 0);
+			break;
+			case (CardState.death):
+				f += Time.deltaTime;
+				axeY += 10f+(f * f+10 + Time.deltaTime);
+			break;
+		}
+		
+		transform.eulerAngles = new Vector3(0, axeY, 0);
     }
-
-
+	public void SetState(CardState cs)
+	{
+		currentState = cs;
+	}
+	
     void OnMouseDown()
     {
       //  print("1");
-        if (!isopen)
-        {
-        //    print("2");
-            if (isBlock == false)
-            {
-          //      print("3");
-                if (!ischosen)
-                {
-            //        print("4");
-                    ischosen = true;
-                    LvlGen.setChosenCard(go);
-                }
-            }
-        }
+        //if (!isopen)
+        //{
+        ////    print("2");
+        //    if (isBlock == false)
+        //    {
+        //  //      print("3");
+        //        if (!ischosen)
+        //        {
+        //    //        print("4");
+        //            ischosen = true;
+        //            LvlGen.setChosenCard(go);
+        //        }
+        //    }
+        //}
+		
+		if (currentState == CardState.unblock){
+			currentState = CardState.open;
+			LvlGen.setChosenCard(go);
+		}
+			
     }
 
-    void Canvas()
-    {
-        
-    }
+
 /*
  
      

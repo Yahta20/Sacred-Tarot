@@ -5,6 +5,14 @@ using UnityEngine.UI;
 using System.IO;
 using System;
 
+
+
+public enum GameState{
+	play=0,
+	pause=1,
+	over=2,
+	load=3
+} 
 public class LevelGenerator : MonoBehaviour
 {
     [SerializeField] private GameObject[] HighArcCard;
@@ -27,25 +35,25 @@ public class LevelGenerator : MonoBehaviour
     [SerializeField] public float reservSpaceY;//   = 0.9
 
     private GameObject[] SetOfCard = new GameObject[25];
-    private GameObject[,] CardPack = new GameObject[5, 5];
 
     private GameObject BufCard1 = null;
     private GameObject BufCard2 = null;
 
     private CameraBihevior cbs = null;
-
-    private Canvas mainCanvas = null;
-
+    private CanvasBihevior canvasBihaviorScript = null;
     private Progress progress = new Progress();
-
+	
     private byte[] BufParam = new byte[5];
-
     private byte deletedCards = 0;
 
-    private byte emountcups = 0;
-    private byte emountpent = 0;
-    private byte emountsword = 0;
-    private byte emountwand = 0;
+    //private GameObject[,] CardPack = new GameObject[5, 5];
+    //private byte emountcups = 0;
+    //private byte emountpent = 0;
+    //private byte emountsword = 0;
+    //private byte emountwand = 0;
+	
+	public GameState currentState;
+	
     private sbyte tries = 0;
     private long Score = 0;
     private long maxScore = 0;
@@ -61,13 +69,15 @@ public class LevelGenerator : MonoBehaviour
     {
         //SaveLoad.fileDelete();
         //Conecting drawing area
-        mainCanvas = GameObject.Find("Main_Canvas").GetComponent(typeof(Canvas)) as Canvas;
+        Canvas mainCanvas = GameObject.Find("Main_Canvas").GetComponent(typeof(Canvas)) as Canvas;
         Camera cam = GameObject.Find("Main_Camera").GetComponent(typeof(Camera)) as Camera;
         cbs = cam.GetComponent(typeof(CameraBihevior)) as CameraBihevior;
-        cbs.setOrtographicSet(false);
-        SaveLoad.fileDelete();
+        canvasBihaviorScript = mainCanvas.GetComponent(typeof(CanvasBihevior)) as CanvasBihevior;
+		cbs.setOrtographicSet(false);
+		SaveLoad.fileDelete();//disable progress
         progress = SaveLoad.loadData();
-
+		currentState = GameState.play;
+		canvasBihaviorScript.SetCanvasState(CanvasState.info);
         //BufParam =  progress.getCardData();
 
         tries = progress.getEmountTries();
@@ -96,143 +106,211 @@ public class LevelGenerator : MonoBehaviour
 
         setDisplayParam();
     }
-    private void FixedUpdate()
+    
+	void FixedUpdate()
     {
         if (tries == 0)
         {
-            //Canvas of deth
+            currentState = GameState.over;
+			//Canvas of deth
             LockAllCards(true);
 
         }
-    }
+        
+		if (Application.platform == RuntimePlatform.Android)
+			{
+
+				if (Input.GetKey(KeyCode.Escape))
+				{
+					//pause
+					currentState = GameState.pause;
+					canvasBihaviorScript.SetCanvasState(CanvasState.info);
+					return;
+				}
+
+			}
+		//Swith from posible game states
+		switch (currentState){
+			case (GameState.play):
+				 //android ramsy
+				SetPlay();
+			break;
+			case (GameState.pause):
+				SetPause();
+			break;
+			case (GameState.over):
+				SetOver();
+			break;
+			case (GameState.load):
+				
+			break;
+		}
+    
+		if (deletedCards == 25)
+		{
+			publishCards();
+			deletedCards = 0;
+		}
+	
+	}
+	
     void LateUpdate()
     {
-        //android ramsy
-        if (Application.platform == RuntimePlatform.Android)
-        {
+		
 
-            if (Input.GetKey(KeyCode.Escape))
-            {
-                //pause
-                Application.LoadLevel("Start");
-                return;
-            }
+			//Updating data of game
 
-        }
+			updateSave();
+			setDisplayParam();
 
-        
+			float[] a = { setX, setY };
+			//Set card position whith steps cards
+			deletedCards = 0;
+			foreach (GameObject child in SetOfCard)
+			{
+				if (child != null)
+				{
+					CardBihevior ChildBihevior = child.GetComponent(typeof(CardBihevior)) as CardBihevior;
+					float[] cardPos = ChildBihevior.getPosition();
+					a[0] = (cardPos[0] / cardSizeX) * setX;
+					a[1] = (cardPos[1] / cardSizeY) * setY;
+					ChildBihevior.SetPosition(a);
+				}
+				else
+				{
+					deletedCards++;
+				}
 
+			}
 
-        //Updating data of game
+			if (BufCard1 != null)
+			{
+				CardBihevior FirstChosenCard = BufCard1.GetComponent<CardBihevior>();
+				CheckOfArkan(BufCard1);
+				//print("allo0");
+				//if (FirstChosenCard.Openstate())
+				//{
+				//
+				//	LockAllCards(false);
+				//	//  print("allo");
+				//}
+				//else
+				//{
+				//	//print("allo1");
+				//	LockAllCards(true);
+				//}
+			}
 
-        updateSave();
-        setDisplayParam();
+			if (BufCard2 != null)
+			{
+				CardBihevior SecondChosenCard = BufCard2.GetComponent<CardBihevior>();
+				CheckOfArkan(BufCard2);
+				//if (SecondChosenCard.Openstate())
+				//{
+				//	LockAllCards(false);
+				//
+				//}
+				//else
+				//{
+				//
+				//	LockAllCards(true);
+				//}
+			}
+			//sravnenie of cards 
+			if (BufCard1 != null & BufCard2 != null)
+			{
+				LockAllCards(true);
+				CardBihevior ACard = BufCard1.GetComponent<CardBihevior>();
+				CardBihevior BCard = BufCard2.GetComponent<CardBihevior>();
 
-        if (deletedCards == 25)
-        {
-            publishCards();
-            deletedCards = 0;
-        }
-        float[] a = { setX, setY };
-        //Set card position whith steps cards
-        deletedCards = 0;
-        foreach (GameObject child in SetOfCard)
-        {
-            if (child != null)
-            {
-                CardBihevior ChildBihevior = child.GetComponent(typeof(CardBihevior)) as CardBihevior;
-                float[] cardPos = ChildBihevior.getPosition();
-                a[0] = (cardPos[0] / cardSizeX) * setX;
-                a[1] = (cardPos[1] / cardSizeY) * setY;
-                ChildBihevior.SetPosition(a);
-            }
-            else
-            {
-                deletedCards++;
-            }
+				if ((ACard.currentState==CardState.block & BCard.currentState==CardState.block) |
+				(ACard.currentState==CardState.open & BCard.currentState==CardState.open))
+				{
 
-        }
+					if (BufCard1.name == BufCard2.name)//Если две карты одинаковые.
+					{
+						//destruction
+						score4cards(BufCard1, BufCard2);
 
-        if (BufCard1 != null)
-        {
-            CardBihevior FirstChosenCard = BufCard1.GetComponent<CardBihevior>();
-            CheckOfArkan(BufCard1);
-            //print("allo0");
-            if (FirstChosenCard.Openstate())
-            {
+						// make own procedure for single card
+						//get light only once
 
-                LockAllCards(false);
-                //  print("allo");
-            }
-            else
-            {
-                //print("allo1");
-                LockAllCards(true);
-            }
-        }
+						destroingCard(BufCard1);
+						destroingCard(BufCard2);
 
-        if (BufCard2 != null)
-        {
-            CardBihevior SecondChosenCard = BufCard2.GetComponent<CardBihevior>();
-            CheckOfArkan(BufCard2);
-            if (SecondChosenCard.Openstate())
-            {
-                LockAllCards(false);
+						tries++;
 
-            }
-            else
-            {
-
-                LockAllCards(true);
-            }
-        }
-        //sravnenie of cards 
-        if (BufCard1 != null & BufCard2 != null)
-        {
-            LockAllCards(true);
-            CardBihevior ACard = BufCard1.GetComponent<CardBihevior>();
-            CardBihevior BCard = BufCard2.GetComponent<CardBihevior>();
-
-            if (ACard.Openstate() && BCard.Openstate())
-            {
-
-                if (BufCard1.name == BufCard2.name)//Если две карты одинаковые.
-                {
-                    //destruction
-
-
-                    score4cards(BufCard1, BufCard2);
-
-                    // make own procedure for single card
-                    //get light only once
+					}
+					if (BufCard1.name != BufCard2.name)
+					{
+						ACard.SetState(CardState.close);
+						BCard.SetState(CardState.close);
+						tries--;
+					}
 
 
-                    destroingCard(BufCard1);
-                    destroingCard(BufCard2);
+					BufCard1 = null;
+					BufCard2 = null;
+				}
+			}
 
-                    tries++;
-
-                }
-                if (BufCard1.name != BufCard2.name)
-                {
-                    ACard.notAcouple();
-                    BCard.notAcouple();
-                    tries--;
-                }
-
-
-                BufCard1 = null;
-                BufCard2 = null;
-            }
-        }
-
-        else
-        {
-
-            LockAllCards(false);
-        }
+			//else
+			//{
+			//
+			//	LockAllCards(false);
+			//}
 
     }
+	
+    //public functions
+
+    public void setChosenCard(GameObject go)
+    {
+        if (BufCard1 == null)
+        {
+            BufCard1 = go;
+            //LockAllCards(true);
+        }
+        else if (BufCard2 == null)
+        {
+            BufCard2 = go;
+            //LockAllCards(true);
+        }
+    }
+
+    public void updateSave()
+    {
+
+        SemLightLabel.text = progress.getEmountLightSwords().ToString();
+        CemLightLabel.text = progress.getEmountLightCups().ToString();
+        PemLightLabel.text = progress.getEmountLightPents().ToString();
+        WemLightLabel.text = progress.getEmountLightWands().ToString();
+        scoreLabel.text = Score.ToString();
+        triesLabel.text = tries.ToString();
+        progress.setEmountTries(tries);
+        if ((Score > maxScore) & !beatMaxScore) { progress.setMaxScore(Score); tries += 5; beatMaxScore = true; }
+        SaveLoad.saveData(progress);
+    }
+
+	public void SetPause(){
+		canvasBihaviorScript.SetCanvasState(CanvasState.pause);
+		currentState = GameState.pause;
+	}                        
+	public void SetOver(){   
+		currentState = GameState.over;
+		canvasBihaviorScript.SetCanvasState(CanvasState.over);
+	}                        
+	public void SetPlay(){   
+		currentState = GameState.play;
+		canvasBihaviorScript.SetCanvasState(CanvasState.info);
+	}
+	public void BackToMenu(){
+		Application.LoadLevel("Start");
+	}
+	public void SetRestart(){
+		Application.LoadLevel("Level");
+	}
+    //private functions
 
     private void score4cards(GameObject bufCard1, GameObject bufCard2)
     {
@@ -259,40 +337,6 @@ public class LevelGenerator : MonoBehaviour
 
     }
 
-
-
-    //public functions
-
-    public void setChosenCard(GameObject go)
-    {
-        if (BufCard1 == null)
-        {
-            BufCard1 = go;
-            LockAllCards(true);
-        }
-        else if (BufCard2 == null)
-        {
-            BufCard2 = go;
-            LockAllCards(true);
-        }
-    }
-
-    public void updateSave()
-    {
-
-        SemLightLabel.text = progress.getEmountLightSwords().ToString();
-        CemLightLabel.text = progress.getEmountLightCups().ToString();
-        PemLightLabel.text = progress.getEmountLightPents().ToString();
-        WemLightLabel.text = progress.getEmountLightWands().ToString();
-        scoreLabel.text = Score.ToString();
-        triesLabel.text = tries.ToString();
-        progress.setEmountTries(tries);
-        if ((Score > maxScore) & !beatMaxScore) { progress.setMaxScore(Score); tries += 5; beatMaxScore = true; }
-        SaveLoad.saveData(progress);
-    }
-
-
-    //private functions
 
     private void publishCards()
     {
@@ -408,20 +452,20 @@ public class LevelGenerator : MonoBehaviour
         return ((float)(int)(n * 100)) / 100;
     }
 
-    private void LockAllCards(bool b)
-    {
-        ///Locking or Unlocking all cards by putting bool charakter
-
-        for (int j = 0; j < 25; j++)
-        {
-            if (SetOfCard[j] != null)
-            {
-                CardBihevior Card = SetOfCard[j].GetComponent<CardBihevior>();
-                Card.SetBlock(b);
-            }
-
-        }
-    }
+    //private void LockAllCards(bool b)
+    //{
+    //    ///Locking or Unlocking all cards by putting bool charakter
+	//
+    //    for (int j = 0; j < 25; j++)
+    //    {
+    //        if (SetOfCard[j] != null)
+    //        {
+    //            CardBihevior Card = SetOfCard[j].GetComponent<CardBihevior>();
+    //            Card.SetBlock(b);
+    //        }
+	//
+    //    }
+    //}
 
     private void CheckOfArkan(GameObject go)
     {
@@ -589,7 +633,7 @@ public class LevelGenerator : MonoBehaviour
 
         CardBihevior ACard = go.GetComponent<CardBihevior>();
 
-        ACard.Death();
+        ACard.SetState(CardState.death);
 
         float[] fc = ACard.getPosition();
         GameObject Splash1 = Instantiate(PartSys, new Vector3(fc[0], fc[1], 0), Quaternion.identity) as GameObject;
